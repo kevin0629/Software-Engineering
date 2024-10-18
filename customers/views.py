@@ -101,7 +101,7 @@ def callback():
     username = user_info.get('identifier')
     # user_table - password
     password = encrypt_password(user_info.get('personalId')[-4:])
-    # user_table - roke (1.顧客 2.店家)
+    # user_table - role (1.顧客 2.店家)
     role = 1
 
     # customer - name
