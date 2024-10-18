@@ -64,4 +64,4 @@ jobs:
         with:
           app-name: 'NCUCampusEats'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F8A11BD0304A46E58A7EB42106D7753D }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E10FECE556E54AC3A3E7C687E382B6A5 }}
