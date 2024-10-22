@@ -11,7 +11,14 @@ sudo mv  * /var/www/ncucampuseats-app
 
 # Navigate to the app directory
 cd /var/www/ncucampuseats-app/
-sudo mv env .env
+
+echo "creating a virtual environment"
+# Create a virtual environment
+python3 -m venv env
+
+echo "activating virtual environment"
+# Activate the virtual environment
+source env/bin/activate
 
 sudo apt-get update
 echo "installing python and pip"
@@ -19,7 +26,7 @@ sudo apt-get install -y python3 python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-sudo pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Update and install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
@@ -57,5 +64,5 @@ sudo rm -rf myapp.sock
 # # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
 # # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
 echo "starting gunicorn"
-sudo gunicorn --workers 3 --bind unix:myapp.sock  app:app --user www-data --group www-data --daemon
+sudo env PATH="/var/www/ncucampuseats-app/env/bin:$PATH" gunicorn --workers 3 --bind unix:myapp.sock app:app --user www-data --group www-data --daemon
 echo "started gunicorn 🚀"
