@@ -19,11 +19,11 @@ sudo apt-get install -y python3-venv pkg-config
 
 # Create a virtual environment with sudo
 echo "creating a virtual environment"
-sudo python3 -m venv env
+python3 -m venv /var/www/ncucampuseats-app/env
 
 # Activate the virtual environment
 echo "activating virtual environment"
-source env/bin/activate
+source /var/www/ncucampuseats-app/env/bin/activate
 
 # Upgrade pip
 echo "upgrading pip"
