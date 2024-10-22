@@ -7,23 +7,27 @@ echo "creating app folder"
 sudo mkdir -p /var/www/ncucampuseats-app
 
 echo "moving files to app folder"
-sudo mv  * /var/www/ncucampuseats-app
+sudo mv * /var/www/ncucampuseats-app
 
 # Navigate to the app directory
 cd /var/www/ncucampuseats-app/
-sudo mv env .env
 
-echo "creating a virtual environment"
+# Ensure Python venv package is installed
+echo "installing python3-venv"
+sudo apt-get update
+sudo apt-get install -y python3-venv
+
 # Create a virtual environment
-sudo python3 -m venv env
+echo "creating a virtual environment"
+python3 -m venv env
 
-echo "activating virtual environment"
 # Activate the virtual environment
+echo "activating virtual environment"
 source env/bin/activate
 
-sudo apt-get update
-echo "installing python and pip"
-sudo apt-get install -y python3 python3-pip
+# Upgrade pip
+echo "upgrading pip"
+pip install --upgrade pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
@@ -61,9 +65,7 @@ fi
 sudo pkill gunicorn
 sudo rm -rf myapp.sock
 
-# # Start Gunicorn with the Flask application
-# # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
-# # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
+# Start Gunicorn with the Flask application
 echo "starting gunicorn"
 sudo env PATH="/var/www/ncucampuseats-app/env/bin:$PATH" gunicorn --workers 3 --bind unix:myapp.sock app:app --user www-data --group www-data --daemon
 echo "started gunicorn 🚀"
