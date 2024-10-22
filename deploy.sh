@@ -15,7 +15,7 @@ cd /var/www/ncucampuseats-app/
 # Ensure Python venv package is installed
 echo "installing python3-venv"
 sudo apt-get update
-sudo apt-get install -y python3-venv
+sudo apt-get install -y python3-venv pkg-config
 
 # Create a virtual environment with sudo
 echo "creating a virtual environment"
