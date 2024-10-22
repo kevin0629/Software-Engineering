@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "deleting old app"
-sudo rm -rf /var/www/
+sudo rm -rf /var/www/ncucampuseats-app
 
 echo "creating app folder"
 sudo mkdir -p /var/www/ncucampuseats-app
@@ -17,9 +17,9 @@ echo "installing python3-venv"
 sudo apt-get update
 sudo apt-get install -y python3-venv
 
-# Create a virtual environment
+# Create a virtual environment with sudo
 echo "creating a virtual environment"
-python3 -m venv env
+sudo python3 -m venv env
 
 # Activate the virtual environment
 echo "activating virtual environment"
@@ -63,7 +63,7 @@ fi
 
 # Stop any existing Gunicorn process
 sudo pkill gunicorn
-sudo rm -rf myapp.sock
+sudo rm -f myapp.sock
 
 # Start Gunicorn with the Flask application
 echo "starting gunicorn"
