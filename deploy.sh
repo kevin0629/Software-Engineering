@@ -11,10 +11,11 @@ sudo mv  * /var/www/ncucampuseats-app
 
 # Navigate to the app directory
 cd /var/www/ncucampuseats-app/
+sudo mv env .env
 
 echo "creating a virtual environment"
 # Create a virtual environment
-python3 -m venv env
+sudo python3 -m venv env
 
 echo "activating virtual environment"
 # Activate the virtual environment
