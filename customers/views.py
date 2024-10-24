@@ -11,8 +11,8 @@ customers_blueprints = Blueprint( 'customers', __name__, template_folder= 'templ
 
 customers_blueprints.secret_key = os.urandom(24)  # Session 加密用
 # OAuth 設定
-CLIENT_ID = '20241007203637hgWIOoOg6QGH'  # 從中央大學 Portal 申請
-CLIENT_SECRET = 'YUustASvU0LWPSFXygagued9EILygcfv4h3xofCYJYAuQEoMXrLatvFy'  # 從中央大學 Portal 申請
+CLIENT_ID = '20241006124146JNAtIrxu5pib'  # 從中央大學 Portal 申請
+CLIENT_SECRET = '6aEUaGj20UIynYA3qp6ezElULErCSuRMYQnseXzqUluoK3NMYT5QfxNk'  # 從中央大學 Portal 申請
 AUTHORIZATION_URL = 'https://portal.ncu.edu.tw/oauth2/authorization'
 TOKEN_URL = 'https://portal.ncu.edu.tw/oauth2/token'
 USER_INFO_URL = 'https://portal.ncu.edu.tw/apis/oauth/v1/info'
