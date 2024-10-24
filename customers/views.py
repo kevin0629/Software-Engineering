@@ -16,7 +16,7 @@ CLIENT_SECRET = 'YUustASvU0LWPSFXygagued9EILygcfv4h3xofCYJYAuQEoMXrLatvFy'  # �
 AUTHORIZATION_URL = 'https://portal.ncu.edu.tw/oauth2/authorization'
 TOKEN_URL = 'https://portal.ncu.edu.tw/oauth2/token'
 USER_INFO_URL = 'https://portal.ncu.edu.tw/apis/oauth/v1/info'
-REDIRECT_URI = 'http://localhost:5000/customers/callback'  # 回調 URL
+REDIRECT_URI = 'http://0.0.0.0:5000/customers/callback'  # 回調 URL
 SCOPE = 'id identifier chinese-name email mobile-phone personal-id'
 
 
