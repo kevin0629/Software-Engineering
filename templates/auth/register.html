@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選擇角色註冊</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .form-container.active {
+            display: block;
+            opacity: 1;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .flashes {
+            list-style: none;
+            padding: 0;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>選擇角色註冊</h1>
+
+        <!-- Flash message section -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <button class="button" onclick="showForm('customer')">顧客註冊</button>
+        <button class="button" onclick="showForm('restaurant')">店家註冊</button>
+
+        <!-- 顧客註冊表單 -->
+        <div id="customer-form" class="form-container">
+            <h2>顧客註冊</h2>
+            <form action="{{ url_for('auth.register') }}" method="post" onsubmit="return validatePasswordForm('customer-form')">
+                <input type="text" name="username" placeholder="帳號" required>
+                <input type="password" name="password" placeholder="密碼" required>
+                <input type="password" name="confirm_password" placeholder="確認密碼" required>
+                <input type="text" name="name" placeholder="姓名" required>
+                <input type="text" name="phone" placeholder="電話" required>
+                <input type="email" name="email" placeholder="電子郵件" required>
+                <input type="hidden" name="role" value="customer">  <!-- 使用描述性值 -->
+                <input type="submit" value="註冊">
+            </form>
+        </div>
+
+        <!-- 店家註冊表單 -->
+        <div id="restaurant-form" class="form-container">
+            <h2>店家註冊</h2>
+            <form action="{{ url_for('auth.register') }}" method="post" onsubmit="return validatePasswordForm('restaurant-form')">
+                <input type="text" name="username" placeholder="帳號" required>
+                <input type="password" name="password" placeholder="密碼" required>
+                <input type="password" name="confirm_password" placeholder="確認密碼" required>
+                <input type="text" name="restaurant_name" placeholder="店家名稱" required>
+                <input type="text" name="phone" placeholder="電話" required>
+                <input type="text" name="address" placeholder="地址" required>
+                <input type="text" name="business_hours" placeholder="營業時間" required>
+                <input type="text" name="manager" placeholder="負責人">
+                <label for="icon">上傳餐廳照片：</label>
+                <input type="file" id="icon" name="icon" accept="image/*">
+                <input type="hidden" name="role" value="restaurant">  <!-- 使用描述性值 -->
+                <input type="submit" value="註冊">
+            </form>
+        </div>
+
+    <script>
+        function showForm(role) {
+            // 隱藏所有表單
+            document.getElementById('customer-form').classList.remove('active');
+            document.getElementById('restaurant-form').classList.remove('active');
+
+            // 顯示所選角色的表單，並添加 active 類
+            if (role === 'customer') {
+                document.getElementById('customer-form').classList.add('active');
+            } else if (role === 'restaurant') {
+                document.getElementById('restaurant-form').classList.add('active');
+            }
+        }
+
+        function validatePasswordForm(formId) {
+            let password = document.querySelector(`#${formId} input[name="password"]`).value;
+            let confirmPassword = document.querySelector(`#${formId} input[name="confirm_password"]`).value;
+
+            console.log("Password:", password);
+            console.log("Confirm Password:", confirmPassword);
+
+            if (password.length < 8) {
+                alert("密碼長度至少8個字符！");
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                alert("密碼與確認密碼不一致！");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

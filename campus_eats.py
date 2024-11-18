@@ -2,7 +2,9 @@ from sqlalchemy import create_engine, Column, Integer, String, DECIMAL, Text, Da
 from sqlalchemy.orm import relationship, declarative_base
 
 # 先不指定具體資料庫，連接 MySQL 伺服器
-engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64')
+# engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64')
+DATABASE_URL = 'mysql+pymysql://root:@localhost'
+engine = create_engine(DATABASE_URL)
 
 # 創建資料庫
 with engine.connect() as connection:
@@ -100,8 +102,11 @@ class OrderTable(Base):
 class OrderDetail(Base):
     __tablename__ = 'order_detail'
     
+    # 定義主鍵的兩個列
+    order_id = Column(Integer, ForeignKey('order_table.order_id'), primary_key=True, comment='對應的訂單ID')
     order_detail_id = Column(Integer, primary_key=True, autoincrement=True, comment='訂單明細ID')
-    order_id = Column(Integer, ForeignKey('order_table.order_id'), comment='對應的訂單ID')
+    
+    # 其他屬性
     item_id = Column(Integer, ForeignKey('menu_item.item_id'), comment='對應的餐點ID')
     item_note = Column(Text, comment='餐點備註')
     quantity = Column(Integer, nullable=False, comment='購買的餐點數量')
@@ -113,7 +118,9 @@ class OrderDetail(Base):
     menu_item = relationship('MenuItem', back_populates='order_details')
 
 # 創建資料庫引擎（使用你的資料庫資訊）
-engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64/campus_eats')
+# engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64/campus_eats')
+DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats'
+engine = create_engine(DATABASE_URL)
 
 # 建立所有表格
 Base.metadata.create_all(engine)

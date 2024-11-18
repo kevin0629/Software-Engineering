@@ -1,14 +1,15 @@
 import os
-from flask import Blueprint, render_template
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 from contextlib import contextmanager
-from campus_eats import UserTable, Customer  
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from campus_eats import Restaurant, MenuItem
+from werkzeug.utils import secure_filename
 
-# 建立實體
-customers_blueprints = Blueprint('customers', __name__, template_folder='templates/customers', static_folder='./static')
 
-customers_blueprints.secret_key = os.urandom(24)  # Session 加密用
+menus_blueprints = Blueprint('menus', __name__, static_folder='./static')
+
+menus_blueprints.secret_key = os.urandom(24)  # Session 加密用
 
 # 創建資料庫引擎
 # DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
@@ -17,6 +18,7 @@ DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
+
 
 # 創建一個上下文管理器來自動管理 Session 的生命週期
 @contextmanager
@@ -31,7 +33,3 @@ def get_session():
     finally:
         session.close()  # 結束後關閉 session
 
-@customers_blueprints.route('/menu')
-def menu():
-    # 返回菜單頁面
-    return render_template('customers/menu.html')

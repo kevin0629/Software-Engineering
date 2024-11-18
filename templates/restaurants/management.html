@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐廳管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .info-panel {
+            width: 300px;
+            background-color: #f9f9f9;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .info-header {
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .info-content {
+            padding: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .info-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .info-content form input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .info-content form input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .info-buttons {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 10px;
+        }
+        .info-buttons button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .info-buttons button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>餐點管理</h1>
+        <p>此處為主要內容區域，包含餐點列表或其他資訊。</p>
+    </div>
+    <div class="info-panel">
+        <div class="info-header" id="info-header">餐廳資訊</div>
+        <div class="info-content" id="info-content">
+            <p><strong>餐廳名稱：</strong>{{ restaurant_name }}</p>
+            <p><strong>電話：</strong>{{ phone }}</p>
+            <p><strong>地址：</strong>{{ address }}</p>
+            <p><strong>營業時間：</strong>{{ business_hour }}</p>
+            <p><strong>負責人：</strong>{{ manager }}</p>
+            <img src="{{ icon }}" alt="餐廳圖標" />
+        </div>
+        <div class="info-buttons">
+            <button onclick="editStoreInfo()">修改餐廳資訊</button>
+            <button onclick="addItem()">新增餐點</button>
+        </div>
+    </div>
+
+    <script>
+        const infoContent = document.getElementById('info-content');
+        const infoHeader = document.getElementById('info-header');
+
+        // 新增餐點功能
+        function addItem() {
+            infoHeader.textContent = "新增餐點";
+            infoContent.innerHTML = `
+                <h2>新增餐點</h2>
+                <form action="{{ url_for('restaurants.add_item') }}" method="post" enctype="multipart/form-data" onsubmit="return validateAddItemForm()">
+                    <input type="text" name="item_name" placeholder="餐點名稱" required>
+                    <input type="number" name="price" placeholder="餐點價格" required>
+                    <input type="text" name="description" placeholder="餐點描述">
+                    <input type="number" name="status" placeholder="餐點狀態" required> <!-- （0停售、1販售中） -->
+                    <label for="item_image">上傳餐點照片：</label>
+                    <input type="file" id="item_image" name="item_image" accept="image/*" required>
+                    <input type="submit" value="新增">
+                </form>
+            `;
+        }
+
+        // 表單驗證
+        function validateAddItemForm() {
+            const price = document.querySelector('[name="price"]').value;
+            const status = document.querySelector('[name="status"]').value;
+
+            if (price < 0) {
+                alert('請妥善設置餐點價格 (不可為負數)');
+                return false;
+            }
+            
+            if (status > 1 || status < 0) {
+                alert('請妥善設置餐點狀態 (0停售、1販售中)');
+                return false;
+            }
+
+            return true;
+        }
+
+        // 修改餐廳資訊
+        function editStoreInfo() {
+            infoHeader.textContent = "修改餐廳資訊";
+            infoContent.innerHTML = `
+                <h2>修改餐廳資訊</h2>
+                <form action="{{ url_for('restaurants.edit_store_info') }}" method="post" enctype="multipart/form-data" onsubmit="return validateAddItemForm()">
+                    <input type="text" name="item_name" placeholder={{ restaurant_name }} required>
+                    <input type="number" name="price" placeholder={{ phone }} required>
+                    <input type="text" name="address" value={{ address }}>
+                    <input type="text" name="business_hours" value={{ business_hour }} required>
+                    <input type="text" name="manager" placeholder={{ manager }}>
+                    <label for="icon">上傳餐廳照片：</label>
+                    <input type="file" id="icon" name="icon" accept="image/*">
+                    <input type="submit" value="修改">
+                </form>
+            `;
+        }
+    </script>
+</body>
+</html>

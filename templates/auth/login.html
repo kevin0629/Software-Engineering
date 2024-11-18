@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input[type="submit"] {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .portal-button {
+            display: inline-block;
+            text-align: center;
+            padding: 10px 0;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .portal-button:hover {
+            background-color: #218838;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .flashes {
+            list-style: none;
+            padding: 0;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>登入</h1>
+
+        <!-- Flash message section -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <!-- 在校師生 Portal 登入按鈕 -->
+        <a href="{{ url_for('auth.portal_login') }}" class="portal-button">在校師生 Portal 登入</a>
+
+        <hr>
+
+        <!-- 登入表單 -->
+        <form action="{{ url_for('auth.login') }}" method="post">
+            <input type="text" name="username" placeholder="帳號" required>
+            <input type="password" name="password" placeholder="密碼" required>
+            <input type="submit" value="登入">
+        </form>
+
+        <!-- 註冊連結 -->
+        <div class="register-link">
+            還沒有帳號？<br>選擇角色進行 <a href="{{ url_for('auth.register') }}">註冊</a>
+        </div>
+    </div>
+</body>
+</html>
