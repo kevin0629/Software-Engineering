@@ -102,6 +102,15 @@ def view_menu(restaurant_id):
     
     with get_session() as db_session:
         menu_info = db_session.query(MenuItem).filter_by(restaurant_id=restaurant_id).all()
+        restaurant_info = db_session.query(Restaurant).filter_by(restaurant_id=restaurant_id).first()
+        
+        restaurant_data = {
+            "restaurant_name": restaurant_info.restaurant_name,
+            "phone": restaurant_info.phone,
+            "address": restaurant_info.address,
+            "business_hours": restaurant_info.business_hours,
+            "icon": restaurant_info.icon
+        }
         # 將 MenuItem 的資料提取為字典
         menu_items = [
             {
@@ -118,6 +127,7 @@ def view_menu(restaurant_id):
     if role == 1:
         data = {
             "username": session.get('username'),
+            "restaurant": restaurant_data,
             "menu_items": menu_items  # 使用轉換過的資料
         }
         return render_template('customers/view_menu.html', **data)
