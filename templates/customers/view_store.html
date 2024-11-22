@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>餐廳管理</title>
+    <title>NCU Campus Eats</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,16 +40,6 @@
         .menu-item:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .menu-item.grayed-out {
-            background-color: #e0e0e0; /* 更深的灰色背景 */
-            color: #aaa; /* 更淺的文字顏色 */
-            border: 1px dashed #ccc; /* 虛線邊框，提示不可用 */
-            opacity: 0.6; /* 降低透明度，增加「不可用」的視覺感 */
-        }
-        .menu-item.grayed-out img {
-            filter: grayscale(100%); /* 圖片灰階處理 */
-            opacity: 0.7; /* 圖片稍微透明 */
-        }
         .menu-item h3 {
             margin: 0;
             font-size: 18px;
@@ -70,31 +60,6 @@
             max-height: 128px;
             border-radius: 8px;
             object-fit: cover; /* 保持比例 */
-        }
-        .menu-item .buttons {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        .menu-item .buttons button {
-            flex: 1;
-            padding: 10px;
-            font-size: 14px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            transition: background-color 0.3s;
-        }
-        .menu-item .buttons button:hover {
-            background-color: #45a049;
-        }
-        .menu-item .buttons .delete-btn {
-            background-color: #f44336;
-        }
-        .menu-item .buttons .delete-btn:hover {
-            background-color: #e53935;
         }
 
         /* 頂部條狀導航欄 */
@@ -188,39 +153,40 @@
         .dropdown-menu a:hover {
             background-color: #f5f5f5;
         }
-
-        .order-button {
-            padding: 10px 15px;
-            background-color: white;
-            color: #4CAF50;
+        .cart-button {
+            width: 36px;
+            height: 36px;
+            padding: 0;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            margin-right: 15px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .order-button:hover {
-            background-color: #45a049;
-            color: white;
-        }
-        .menu-item.add-item {
+            border-radius: 50%; /* 圓形按鈕 */
+            background-color: #f2f2f2; /* 背景顏色 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 陰影效果 */
             display: flex;
-            align-items: center;
             justify-content: center;
-            background-color: #f5f5f5;
-            color: #4CAF50;
-            font-size: 36px;
-            font-weight: bold;
+            align-items: center;
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s, transform 0.2s; /* 平滑過渡 */
+            margin-right: 30px;
         }
 
-        .menu-item.add-item:hover {
-            background-color: #4CAF50;
-            color: white;
+        .cart-button:hover {
+            background-color: #e0e0e0; /* 滑鼠懸停變色 */
+            transform: scale(1.1); /* 輕微放大效果 */
+        }
+
+        .cart-button:active {
+            background-color: #cccccc; /* 按下時變色 */
+            transform: scale(0.95); /* 按下時輕微縮小 */
+        }
+
+        .cart-button img {
+            max-width: 80%; /* 圖片佔據按鈕的 80% 寬度 */
+            max-height: 80%; /* 圖片佔據按鈕的 80% 高度 */
+        }
+        /* 去除超連結的默認樣式 */
+        .menu-link {
+            text-decoration: none;
+            color: inherit;
         }
     </style>
 </head>
@@ -228,54 +194,43 @@
     <!-- 頂部導航欄 -->
     <header class="navbar">
         <!-- 左側LOGO和標題 -->
-        <a href="{{ url_for('menus.view_menu', restaurant_id=restaurant_id) }}" class="logo">
-            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO"> <!-- 替換為LOGO的URL -->
+        <a href="{{ url_for('menus.view_store') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO">
             <span>NCU Campus Eats</span>
         </a>
 
         <!-- 右側按鈕與下拉選單 -->
         <div class="menu">
-            <button class="order-button" onclick="manageOrders()">訂單管理</button>
+            <button class="cart-button">
+                <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart">
+            </button>
             <div class="dropdown">
-                {% if icon %}
-                <img src="{{ url_for('static',filename=icon) }}" alt="店家Icon"> <!-- 替換為店家Icon的URL -->
-                {% endif %}
-                <span>{{ restaurant_name }}</span>
+                <img src="{{ url_for('static',filename='images/customer.png') }}" alt="Photo"> <!-- 替換為店家Icon的URL -->
+                <span>{{ username }}</span>
                 <div class="dropdown-menu">
-                    <a href="{{ url_for('restaurants.view_store_info') }}">餐廳資料</a>
                     <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
+                    <a href="#" onclick="viewOrderHistory()">更改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>
             </div>
         </div>
     </header>
     <div class="content">
-        <h1>餐點管理</h1>
+        <h1>店家列表</h1>
         <div class="menu-grid">
-            {% for item in menu_items %}
-                <div class="menu-item {% if item.status == 0 %}grayed-out{% endif %}">
-                    <h3>{{ item.item_name }}</h3>
-                    <p>{{ item.description }}</p>
-                    <p class="price">{{ item.price }} 元</p>
-                    {% if item.item_image %}
-                    <img src="{{ url_for('static', filename=item.item_image) }}" alt="餐點圖片">
-                    {% endif %}
-                    <div class="buttons">
-                        <a href="{{ url_for('menus.view_detailed_menu', item_id=item.item_id) }}">
-                            <button>修改</button>
-                        </a>
-                        <a href="{{ url_for('restaurants.delete_item', item_id=item.item_id) }}" onclick="return confirm('確定要刪除 {{ item.item_name }} 嗎？')">
-                            <button class="delete-btn">刪除</button>
-                        </a>
+            {% for restaurant in openedRestaurants %}
+                <a href="{{ url_for('menus.view_menu', restaurant_id = restaurant.restaurant_id) }}" class="menu-link">
+                    <div class="menu-item">
+                        <h3>{{ restaurant.restaurant_name }}</h3>
+                        <p>{{ restaurant.phone }}</p>
+                        <p>{{ restaurant.address }}</p>
+                        <p>{{ restaurant.business_hours }}</p>
+                        {% if restaurant.icon %}
+                        <img src="{{ url_for('static', filename=restaurant.icon) }}" alt="店家圖片">
+                        {% endif %}
                     </div>
-                </div>
+                </a>
             {% endfor %}
-            <!-- 新增餐點方格 -->
-            <a href="{{ url_for('restaurants.add_item') }}" style="text-decoration: none;">
-                <div class="menu-item add-item">
-                    <h3 style="text-align: center; font-size: 24px; color: #4CAF50;">+</h3>
-                </div>
-            </a>
         </div>
     </div>
 </body>

@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, flash
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from contextlib import contextmanager
@@ -7,8 +7,6 @@ from campus_eats import UserTable, Customer
 
 # 建立實體
 customers_blueprints = Blueprint('customers', __name__, template_folder='templates/customers', static_folder='./static')
-
-customers_blueprints.secret_key = os.urandom(24)  # Session 加密用
 
 # 創建資料庫引擎
 # DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'

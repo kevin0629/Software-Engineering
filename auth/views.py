@@ -9,8 +9,6 @@ from campus_eats import UserTable, Customer, Restaurant
 
 auth_blueprints = Blueprint('auth', __name__, template_folder='templates/auth', static_folder='./static')
 
-auth_blueprints.secret_key = os.urandom(24)  # Session 加密用
-
 # OAuth 設定
 CLIENT_ID = '20241007203637hgWIOoOg6QGH'  # 從中央大學 Portal 申請
 CLIENT_SECRET = 'YUustASvU0LWPSFXygagued9EILygcfv4h3xofCYJYAuQEoMXrLatvFy'  # 從中央大學 Portal 申請
@@ -108,7 +106,7 @@ def callback():
         # 有在用戶資料表中 -> 登入成功，顯示餐廳清單頁面
         session['username'] = username
         session['role'] = role
-        return redirect(url_for('customers.menu'))  # 新用戶自動導向顧客菜單頁面
+        return redirect(url_for('menus.view_store'))  # 新用戶自動導向顧客菜單頁面
 
 
 # 通用的登入邏輯
@@ -127,19 +125,15 @@ def login():
 
                 if user.role == 1:
                     # print("顧客登入成功，將跳轉到菜單頁面。")
-                    return redirect(url_for('customers.menu'))
+                    return redirect(url_for('menus.view_store'))
                 elif user.role == 2:
                     # print("店家登入成功，將跳轉到管理頁面。")
                     restaurant = db_session.query(Restaurant).filter_by(username=username).first()
-                    session['restaurant_name'] = restaurant.restaurant_name
-                    session['phone'] = restaurant.phone
-                    session['address'] = restaurant.address
-                    session['business_hour'] = restaurant.business_hours
-                    session['manager'] = restaurant.manager
-                    session['icon'] = restaurant.icon
                     session['restaurant_id'] = restaurant.restaurant_id
+                    session['restaurant_name'] = restaurant.restaurant_name
+                    session['icon'] = restaurant.icon
 
-                    return redirect(url_for('restaurants.management'))
+                    return redirect(url_for('menus.view_menu', restaurant_id=restaurant.restaurant_id))
             else:
                 flash('帳號或密碼錯誤！')
                 return redirect(url_for('auth.login'))
@@ -174,42 +168,57 @@ def register():
                 db_session.commit()
                 print('顧客註冊成功！')
 
-                return redirect(url_for('customers.menu'))
+                return redirect(url_for('menus.view_store'))
 
             elif role == 'restaurant':
                 restaurant_name = request.form['restaurant_name']
                 phone = request.form['phone']
                 address = request.form['address']
-                business_hours = request.form['business_hours']
                 manager = request.form['manager']
+                manager_email = request.form['manager_email']
                 icon = request.files['icon']
 
-                if icon:
+                if icon and icon.filename:
                     last_store = db_session.query(Restaurant).order_by(desc(Restaurant.restaurant_id)).first()
                     store_id = None
-                    if store_id is None:
+                    if last_store is None:
                         store_id = 0
                     else:
                         store_id = last_store.restaurant_id
+                        
                     # 處理圖片
-                    if icon and icon.filename:
-                        filename, file_extension = os.path.splitext(icon.filename)
-                        filename = str(store_id + 1) + file_extension
-                        image_path = os.path.join('./static/images/restaurants', filename)
-                        image_path = image_path.replace("\\", "/")
-                        os.makedirs(os.path.dirname(image_path), exist_ok=True)  # 確保目錄存在
-                        icon.save(image_path)
-                    else:
-                        image_path = None  # 若無圖片則設為 None
-                    
+                    filename, file_extension = os.path.splitext(icon.filename)
+                    filename = str(store_id + 1) + file_extension
+                    image_path = os.path.join('images/restaurants', filename)  # 儲存相對路徑
+                    image_path = image_path.replace("\\", "/")
+                    os.makedirs(os.path.dirname(os.path.join('./static', image_path)), exist_ok=True)  # 確保目錄存在
+                    icon.save(os.path.join('./static', image_path))  # 儲存圖
+                else:
+                    image_path = 'images/restaurants/restaurant.png'   # 若無圖片則設為設定預設圖片
+                
+                hours = {}
+                for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
+                    times = request.form.getlist(f"{day}[]")
+                    hours[day] = [time for time in times if time]  # 過濾空值
+
+                # 僅包含有時段的日子
+                business_hours = ", ".join(f"{day}: {'、'.join(times)}" for day, times in hours.items() if times)
+
                 new_user = UserTable(username=username, password=encrypt_password(password), role=2)
-                new_restaurant = Restaurant(restaurant_name=restaurant_name, phone=phone, address=address, business_hours=business_hours, manager=manager, icon = image_path, username=username)
+                new_restaurant = Restaurant(restaurant_name=restaurant_name, phone=phone, address=address, business_hours=business_hours, manager=manager, manager_email=manager_email, icon = image_path, username=username)
 
                 db_session.add(new_user)
                 db_session.add(new_restaurant)
                 db_session.commit()
                 print('店家註冊成功！')
 
-                return redirect(url_for('restaurants.management'))
+                return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html')
+
+
+@auth_blueprints.route('/logout')
+def logout():
+    # 清除用戶的 session
+    session.clear()
+    return redirect(url_for('auth.login'))

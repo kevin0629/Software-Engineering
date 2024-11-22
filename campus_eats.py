@@ -50,8 +50,9 @@ class Restaurant(Base):
     restaurant_name = Column(String(100), nullable=False, comment='店家名稱')
     phone = Column(String(20), comment='店家電話號碼')
     address = Column(String(255), comment='店家地址')
-    business_hours = Column(String(100), comment='店家營業時間')
+    business_hours = Column(String(255), comment='店家營業時間')
     manager = Column(String(50), comment='店家負責人')
+    manager_email = Column(String(100), comment='店家負責人電子郵件')
     icon = Column(String(255), comment='店家圖示（URL）')
     username = Column(String(50), ForeignKey('user_table.username'), comment='對應用戶帳號（FK）')
 
@@ -67,7 +68,7 @@ class MenuItem(Base):
     
     item_id = Column(Integer, primary_key=True, autoincrement=True, comment='餐點ID，自動遞增，PK')
     item_name = Column(String(100), nullable=False, comment='餐點名稱')
-    price = Column(DECIMAL(10, 2), nullable=False, comment='餐點價格')
+    price = Column(Integer, nullable=False, comment='餐點價格')
     description = Column(Text, comment='餐點描述')
     status = Column(Integer, comment='餐點狀態（0停售、1販售中）')
     item_image = Column(String(255), comment='餐點圖片URL')
