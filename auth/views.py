@@ -10,18 +10,21 @@ from campus_eats import UserTable, Customer, Restaurant
 auth_blueprints = Blueprint('auth', __name__, template_folder='templates/auth', static_folder='./static')
 
 # OAuth 設定
-CLIENT_ID = '20241007203637hgWIOoOg6QGH'  # 從中央大學 Portal 申請
-CLIENT_SECRET = 'YUustASvU0LWPSFXygagued9EILygcfv4h3xofCYJYAuQEoMXrLatvFy'  # 從中央大學 Portal 申請
+# CLIENT_ID = '20241007203637hgWIOoOg6QGH'  # 從中央大學 Portal 申請
+# CLIENT_SECRET = 'YUustASvU0LWPSFXygagued9EILygcfv4h3xofCYJYAuQEoMXrLatvFy'  # 從中央大學 Portal 申請
+CLIENT_ID = '20241006124146JNAtIrxu5pib' #AWS
+CLIENT_SECRET = '6aEUaGj20UIynYA3qp6ezElULErCSuRMYQnseXzqUluoK3NMYT5QfxNk'  #AWS
 AUTHORIZATION_URL = 'https://portal.ncu.edu.tw/oauth2/authorization'
 TOKEN_URL = 'https://portal.ncu.edu.tw/oauth2/token'
 USER_INFO_URL = 'https://portal.ncu.edu.tw/apis/oauth/v1/info'
-REDIRECT_URI = 'http://localhost:5000/customers/callback'  # 回調 URL
+# REDIRECT_URI = 'http://localhost:5000/customers/callback'  # 回調 URL
+REDIRECT_URI = 'http://13.208.193.179:5000/customers/callback'  # AWS
 SCOPE = 'id identifier chinese-name email mobile-phone personal-id'
 
 # 創建資料庫引擎
 # DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
-# DATABASE_URL = 'mysql+pymysql://root:113423027@13.208.142.64/campus_eats' # AWS
+# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+DATABASE_URL = 'mysql+pymysql://root:113423027@15.152.38.185/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
