@@ -93,6 +93,21 @@
             padding: 0;
             color: red;
         }
+
+        .forgot-password-link {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .forgot-password-link a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .forgot-password-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +136,11 @@
             <input type="password" name="password" placeholder="密碼" required>
             <input type="submit" value="登入">
         </form>
+
+        <!-- 忘記密碼連結 -->
+        <div class="forgot-password-link">
+            <a href="{{ url_for('auth.forgot_password') }}">忘記密碼？</a>
+        </div>
 
         <!-- 註冊連結 -->
         <div class="register-link">

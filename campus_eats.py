@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, declarative_base
 # 先不指定具體資料庫，連接 MySQL 伺服器
 # engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64')
 DATABASE_URL = 'mysql+pymysql://root:@localhost'
+# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
 engine = create_engine(DATABASE_URL)
 
 # 創建資料庫
@@ -121,6 +122,7 @@ class OrderDetail(Base):
 # 創建資料庫引擎（使用你的資料庫資訊）
 # engine = create_engine('mysql+pymysql://root:113423027@13.208.142.64/campus_eats')
 DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats'
+# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
 engine = create_engine(DATABASE_URL)
 
 # 建立所有表格
