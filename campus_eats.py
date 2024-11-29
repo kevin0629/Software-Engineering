@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DECIMAL, Text, Da
 from sqlalchemy.orm import relationship, declarative_base
 
 # 先不指定具體資料庫，連接 MySQL 伺服器
-DATABASE_URL = 'mysql+pymysql://root:113423027@15.152.38.185'
+DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com' #AWS
 # DATABASE_URL = 'mysql+pymysql://root:@localhost'
 engine = create_engine(DATABASE_URL)
 
@@ -119,7 +119,7 @@ class OrderDetail(Base):
     menu_item = relationship('MenuItem', back_populates='order_details')
 
 # 創建資料庫引擎（使用你的資料庫資訊）
-DATABASE_URL = 'mysql+pymysql://root:113423027@15.152.38.185/campus_eats'
+DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com/campus_eats' #AWS
 # DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats'
 engine = create_engine(DATABASE_URL)
 

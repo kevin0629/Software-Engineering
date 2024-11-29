@@ -12,7 +12,7 @@ restaurants_blueprints = Blueprint('restaurants', __name__, template_folder='tem
 # 創建資料庫引擎
 # DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
 # DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
-DATABASE_URL = 'mysql+pymysql://root:113423027@15.152.38.185/campus_eats' # AWS
+DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
