@@ -5,6 +5,7 @@ from restaurants.views import restaurants_blueprints
 from menus.views import menus_blueprints
 from auth.views import auth_blueprints
 from flask_mail import Mail
+import campus_eats
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.urandom(24) 
