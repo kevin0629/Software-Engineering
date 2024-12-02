@@ -19,7 +19,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'ncucampuseats@gmail.com'
-app.config['MAIL_PASSWORD'] = '' # 要記得填入
+app.config['MAIL_PASSWORD'] = 'lqaykqriqgxmhoxc' # 要記得填入
 app.config['MAIL_DEFAULT_SENDER'] = 'ncucampuseats@gmail.com'
 
 mail = Mail(app)

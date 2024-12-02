@@ -255,7 +255,7 @@ def forgot_password():
                         flash('帳號或電子郵件不正確。')
                         return render_template('auth/forgot_password.html')
                 elif user.role == 2:  # 店家
-                    restaurant = db_session.query(Restaurant).filter_by(username=username, email=email).first()
+                    restaurant = db_session.query(Restaurant).filter_by(username=username, manager_email=email).first()
                     if not restaurant:
                         flash('帳號或電子郵件不正確。')
                         return render_template('auth/forgot_password.html')
