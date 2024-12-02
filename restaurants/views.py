@@ -11,8 +11,8 @@ restaurants_blueprints = Blueprint('restaurants', __name__, template_folder='tem
 
 # 創建資料庫引擎
 # DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
-DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com/campus_eats' # AWS
+DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+# DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
@@ -30,32 +30,6 @@ def get_session():
         raise
     finally:
         session.close()  # 結束後關閉 session
-
-
-
-
-# @restaurants_blueprints.route('/management')
-# def management():
-#     # 返回菜單頁面
-#     if session.get('role') != 2:
-#         return redirect(url_for('auth.login'))
-
-#     restaurant_id = session.get('restaurant_id')
-#     menu_info = view_menu(restaurant_id)
-
-#     with get_session() as db_session:
-#         restaurant_info = db_session.query(Restaurant).filter_by(restaurant_id=restaurant_id).first()
-#         data = {
-#             "restaurant_name": restaurant_info.restaurant_name,
-#             "phone": restaurant_info.phone,
-#             "address": restaurant_info.address,
-#             "business_hours": restaurant_info.business_hours,
-#             "manager": restaurant_info.manager,
-#             "icon": restaurant_info.icon,
-#             "menu_items": menu_info
-#         }
-
-#     return render_template('restaurants/management.html', **data)
 
 
 
@@ -78,7 +52,7 @@ def add_item():
                 return redirect(url_for('restaurants.add_item'))
 
             if item_image and item_image.filename:
-                last_item = db_session.query(MenuItem).filter_by(restaurant_id=restaurant_id).order_by(desc(MenuItem.item_id)).first()
+                last_item = db_session.query(MenuItem).order_by(desc(MenuItem.item_id)).first()
                 item_id = None
                 if last_item is None:
                     item_id = 0
