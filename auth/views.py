@@ -23,8 +23,8 @@ REDIRECT_URI = 'http://localhost:5000/customers/callback'  # 回調 URL
 SCOPE = 'id identifier chinese-name email mobile-phone personal-id'
 
 # 創建資料庫引擎
-DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
+DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
 # DATABASE_URL = 'mysql+pymysql://root:113423027@13.208.142.64/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)
