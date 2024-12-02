@@ -209,7 +209,7 @@
                 <span>{{ username }}</span>
                 <div class="dropdown-menu">
                     <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
-                    <a href="#" onclick="viewOrderHistory()">更改密碼</a>
+                    <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>
             </div>

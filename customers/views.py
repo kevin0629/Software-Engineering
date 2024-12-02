@@ -9,8 +9,8 @@ from campus_eats import UserTable, Customer
 customers_blueprints = Blueprint('customers', __name__, template_folder='templates/customers', static_folder='./static')
 
 # 創建資料庫引擎
-# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
+# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
 # DATABASE_URL = 'mysql+pymysql://root:113423027@13.208.142.64/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)

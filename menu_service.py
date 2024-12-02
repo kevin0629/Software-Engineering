@@ -11,8 +11,8 @@ menus_blueprints = Blueprint('menus', __name__, static_folder='./static')
 menus_blueprints.secret_key = os.urandom(24)  # Session 加密用
 
 # 創建資料庫引擎
-# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
+# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
 # DATABASE_URL = 'mysql+pymysql://root:113423027@13.208.142.64/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)

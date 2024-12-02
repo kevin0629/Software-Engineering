@@ -23,8 +23,8 @@ REDIRECT_URI = 'http://localhost:5000/customers/callback'  # 回調 URL
 SCOPE = 'id identifier chinese-name email mobile-phone personal-id'
 
 # 創建資料庫引擎
-# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
-DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
+DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
+# DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats' # Nicole
 # DATABASE_URL = 'mysql+pymysql://root:113423027@13.208.142.64/campus_eats' # AWS
 
 engine = create_engine(DATABASE_URL)
@@ -269,3 +269,28 @@ def forgot_password():
                 flash('帳號或電子郵件不正確。')
 
     return render_template('auth/forgot_password.html')
+
+# 修改密碼
+@auth_blueprints.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        if new_password != confirm_password:
+            flash('新密碼和確認密碼不一致')
+            return redirect(url_for('auth.change_password'))
+
+        with get_session() as db_session:
+            user = db_session.query(UserTable).filter_by(username=session['username']).first()
+            if user and user.password == encrypt_password(current_password):
+                user.password = encrypt_password(new_password)
+                db_session.commit()
+                flash('密碼修改成功')
+                return redirect(url_for('menus.view_store'))
+            else:
+                flash('當前密碼不正確')
+                return redirect(url_for('auth.change_password'))
+
+    return render_template('auth/change_password.html')
