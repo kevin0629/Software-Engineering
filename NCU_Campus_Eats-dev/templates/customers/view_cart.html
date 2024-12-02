@@ -1,0 +1,125 @@
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCU Campus Eats | 目前訂單</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/view_cart.css') }}">
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <header class="navbar">
+        <!-- 左側LOGO和標題 -->
+        <a href="{{ url_for('menus.view_store') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO">
+            <span>NCU Campus Eats | 目前尚未送出的訂單</span>
+        </a>
+
+        <!-- 右側按鈕與下拉選單 -->
+        <div class="menu">
+            <a href="{{ url_for('customers.view_cart') }}">
+                <button class="cart-button">
+                    <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart">
+                </button>
+            </a>
+            <div class="dropdown">
+                <img src="{{ url_for('static',filename='images/customer.png') }}" alt="Photo"> <!-- 替換為使用者Icon的URL -->
+                <span>{{ customer_name }}</span>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('customers.view_order') }}">歷史訂單</a>
+                    <a href="{{ url_for('customers.view_pf') }}">修改個人資料</a>
+                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                </div>
+            </div>
+        </div>
+
+    </header>
+
+    <div id='shopping-cart'>
+        <h1>購物車內容物</h1>
+        {% if cart_items %}
+            {% for restaurant_id, restaurant_info in cart_items.items() %}
+                <div class="restaurant-section">
+                    <h2>店家：{{ restaurant_info['restaurant_name'] }}</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>餐點名稱</th>
+                                <th>餐點單價</th>
+                                <th>購物車內數量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in restaurant_info['items'] %}
+                                <tr>
+                                    <td>{{ item['item_name'] }}</td>
+                                    <td>{{ item['price'] }} 元</td>
+                                    <td>{{ item['quantity'] }}</td>
+                                    <td class="action-column">
+                                        <div class="action-buttons">
+                                        <form action="{{ url_for('customers.add_to_cart') }}" method="post" onsubmit="return confirmAction('{{ item.item_name }}', 'add')">
+                                            <input type="hidden" name="item_id" value="{{ item['item_id'] }}">
+                                            <input type="hidden" name="redirect_flag" value="1">
+                                            <button type="submit" class="button-add">再新增「1」份至購物車</button>
+                                        </form>
+                                        <form action="{{ url_for('customers.remove_from_cart') }}" method="post" onsubmit="return confirmAction('{{ item.item_name }}', 'remove')">
+                                            <input type="hidden" name="order_id" value="{{ item['order_id'] }}">
+                                            <input type="hidden" name="order_detail_id" value="{{ item['order_detail_id'] }}">
+                                            <button type="submit" class="button-remove">從購物車中移除「1」份</button>
+                                        </form>
+                                        <button class="add-note-button">為餐點新增備註</button>
+                                    </div></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <p class="total-amount"><strong>總金額：{{ restaurant_info['total_price'] }} 元</strong></p>
+                    <div class="action-buttons">
+                        <button class="add-note-button">為整筆訂單新增備註</button>
+                        <form action="{{ url_for('customers.checkout_order') }}" method="post" onsubmit="return confirmAction('', 'checkout')">
+                            {% if restaurant_info['items'] | length > 0 %}
+                                <input type="hidden" name="order_id" value="{{ restaurant_info['items'][0]['order_id'] }}">
+                            {% endif %}
+                            <input type="hidden" name="total_price" value="{{ restaurant_info['total_price'] }}">
+                            <button type="submit" class="checkout-button">前往結帳</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>目前沒有任何未送出的訂單。</p>
+        {% endif %}
+    </div>
+    
+    
+    
+    
+    <script>
+        function confirmAction(itemName, action) {
+            let message = "";
+            if (action === "add") {
+                message = "你確定要將 " + itemName + " 加入「1」份至購物車嗎？";
+            } else if (action === "remove") {
+                message = "你確定要將 " + itemName + " 從購物車中移除「1」份嗎？";
+            } else if (action === "checkout") {
+                message = "你確定要進行結帳嗎？";
+            }
+    
+            if (confirm(message)) {
+                if (action === "add") {
+                    alert(itemName + " 新增成功！");
+                } else if (action === "remove") {
+                    alert(itemName + " 移除成功！");
+                } else if (action === "checkout") {
+                    alert("訂單結帳成功！");
+                }
+                return true; // 允許表單提交
+            } else {
+                return false; // 阻止表單提交
+            }
+        }
+    </script>
+    
+    
+    
+    

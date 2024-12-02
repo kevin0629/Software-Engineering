@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCU Campus Eats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/view_menu.css') }}">
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <header class="navbar">
+        <!-- 左側LOGO和標題 -->
+        <a href="{{ url_for('menus.view_store') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO">
+            <span>NCU Campus Eats | 販售中的餐點</span>
+        </a>
+
+        <!-- 右側按鈕與下拉選單 -->
+        <div class="menu">
+            <a href="{{ url_for('customers.view_cart') }}">
+                <button class="cart-button">
+                    <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart">
+                </button>
+            </a>
+            <div class="dropdown">
+                <img src="{{ url_for('static',filename='images/customer.png') }}" alt="Photo"> <!-- 替換為店家Icon的URL -->
+                <span>{{ customer_name }}</span>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('customers.view_order') }}">歷史訂單</a>
+                    <a href="{{ url_for('customers.view_pf') }}">修改個人資料</a>
+                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="content">
+        <!-- 店家資訊 -->
+        <div class="restaurant-details">
+            {% if restaurant.icon %}
+                <img src="{{ url_for('static', filename=restaurant.icon) }}" alt="店家圖片" class="restaurant-image">
+            {% endif %}
+            <div class="info-container">
+                <h1>{{ restaurant.restaurant_name }}</h1>
+                <p><strong>地址：</strong>{{ restaurant.address }}</p>
+                <p><strong>電話：</strong>{{ restaurant.phone }}</p>
+                <p><strong>營業時間：</strong>{{ restaurant.business_hours }}</p>
+            </div>
+        </div>
+
+        <h2>餐點列表</h2>
+        <div class="menu-grid">
+            {% for item in menu_items %}
+                {% if item.status != 0 %}
+                    <div class="menu-item">
+                        <h3>{{ item.item_name }}</h3>
+                        <p>{{ item.description }}</p>
+                        <p class="price">{{ item.price }} 元</p>
+                        {% if item.item_image %}
+                            <img src="{{ url_for('static', filename=item.item_image) }}" alt="餐點圖片">
+                        {% endif %}
+                        <form action="{{ url_for('customers.add_to_cart') }}" method="post" onsubmit="return confirmAddToCart('{{ item.item_name }}')">
+                            <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                            <input type="hidden" name="redirect_flag" value="0">
+                            <button type="submit" class="add-to-cart-button">新增「1」份至購物車</button>
+                        </form>
+                        
+                        
+                        <p></p>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function confirmAddToCart(itemname) {
+            if (confirm("你確定要將"+itemname+"加入「1」份至購物車嗎？")) {
+                return true; // 允許表單提交
+            } else {
+                return false; // 阻止表單提交
+            }
+        }
+    </script>
+</body>
+</html>

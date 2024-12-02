@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐廳資訊</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            padding: 30px;
+            margin-top: 60px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #333;
+        }
+        input[type="text"], input[type="file"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+        legend {
+            font-size: 14px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        img {
+            display: block;
+            margin: 10px auto;
+            border-radius: 8px;
+            max-width: 128px;
+            max-height: 128px;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+        /* 頂部條狀導航欄 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px 20px;
+            background-color: #4CAF50;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 左側LOGO和標題 */
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none; /* 去掉超連結下劃線 */
+            color: inherit; /* 繼承文字顏色 */
+        }
+
+        .navbar .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 30%;
+            margin-right: 10px;
+        }
+
+        .navbar .logo span {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* 右側按鈕與下拉選單 */
+        .navbar .menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .menu .dropdown {
+            display: flex; /* 使用 Flexbox 布局 */
+            align-items: center; /* 垂直方向居中 */
+            gap: 10px; /* 圖片和文字之間的距離 */
+            cursor: pointer;
+        }
+
+        .menu .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .menu .dropdown img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .menu .dropdown span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* 下拉選單樣式 */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 35px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            z-index: 1001;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .order-button {
+            padding: 10px 15px;
+            background-color: white;
+            color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .order-button:hover {
+            background-color: #45a049;
+            color: white;
+        }
+        .menu-item.add-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            color: #4CAF50;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .menu-item.add-item:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <header class="navbar">
+        <!-- 左側LOGO和標題 -->
+        <a href="{{ url_for('menus.view_menu', restaurant_id=restaurant_id) }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO"> <!-- 替換為LOGO的URL -->
+            <span>NCU Campus Eats | 餐點資訊</span>
+        </a>
+
+        <!-- 右側按鈕與下拉選單 -->
+        <div class="menu">
+            <button class="order-button" onclick="manageOrders()">訂單管理</button>
+            <div class="dropdown">
+                {% if icon %}
+                <img src="{{ url_for('static',filename=icon) }}" alt="店家Icon"> <!-- 替換為店家Icon的URL -->
+                {% endif %}
+                <span>{{ restaurant_name }}</span>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('restaurants.view_store_info') }}">餐廳資料</a>
+                    <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
+                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="container">
+        <h2>餐點資訊</h2>
+        <form action="{{ url_for('restaurants.modify_item', item_id=item_id) }}" method="post" enctype="multipart/form-data" onsubmit="return validateModifyItemForm()">
+            <label for="item_name">餐點名稱：</label>
+            <input type="text" id="item_name" name="item_name" value="{{ item_name }}" required>
+
+            <label for="price">餐點價格：</label>
+            <input type="number" id="price" name="price" value="{{ price }}" required>
+
+            <label for="description">餐點描述：</label>
+            <input type="text" id="description" name="description" value="{{ description }}" required>
+
+            <label for="status">餐點狀態(0停售、1販售中)：</label>
+            <input type="number" id="status" name="status" value="{{ status }}" required>
+
+            <label for="item_image">目前的餐廳圖片：</label>
+            {% if icon %}
+            <img src="{{ url_for('static', filename=item_image) }}" alt="餐點圖片">
+            {% endif %}
+
+            <label for="item_image">更新餐廳圖片：</label>
+            <input type="file" id="item_image" name="item_image" accept="image/*">
+
+            <button type="submit" class="btn-submit">修改</button>
+        </form>
+    </div>
+    
+    <script>
+        function validateModifyItemForm() {
+            const price = document.querySelector('[name="price"]').value;
+            const status = document.querySelector('[name="status"]').value;
+
+            if (price < 0) {
+                alert('請妥善設置餐點價格 (不可為負數)');
+                return false;
+            }
+
+            if (status > 1 || status < 0) {
+                alert('請妥善設置餐點狀態 (0停售、1販售中)');
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+</body>
+</html>
