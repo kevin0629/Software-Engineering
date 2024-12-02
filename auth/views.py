@@ -259,15 +259,19 @@ def forgot_password():
 
                 new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
                 encrypted_password = encrypt_password(new_password)
-                user.password = encrypted_password
-                db_session.commit()
 
                 msg = Message('重置密碼', sender='noreply@example.com', recipients=[email])
                 msg.body = f'您的新密碼是：{new_password}'
-                mail.send(msg)
 
-                flash('新密碼已發送到您的電子郵件。')
-                return redirect(url_for('auth.login'))
+                try:
+                    mail.send(msg)
+                    user.password = encrypted_password
+                    db_session.commit()
+                    flash('新密碼已發送到您的電子郵件。')
+                    return redirect(url_for('auth.login'))
+                except Exception as e:
+                    flash('無法發送電子郵件，請稍後再試。')
+                    return render_template('auth/forgot_password.html')
             else:
                 flash('帳號或電子郵件不正確。')
 
@@ -291,7 +295,7 @@ def change_password():
                 user.password = encrypt_password(new_password)
                 db_session.commit()
                 flash('密碼修改成功')
-                return redirect(url_for('menus.view_store'))
+                return redirect(url_for('auth.login'))
             else:
                 flash('當前密碼不正確')
                 return redirect(url_for('auth.change_password'))

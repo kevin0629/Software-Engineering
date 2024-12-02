@@ -27,13 +27,9 @@
                 <img src="{{ url_for('static',filename='images/customer.png') }}" alt="Photo"> <!-- 替換為店家Icon的URL -->
                 <span>{{ customer_name }}</span>
                 <div class="dropdown-menu">
-<<<<<<< HEAD
-                    <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
-                    <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
-=======
                     <a href="{{ url_for('customers.view_order') }}">歷史訂單</a>
                     <a href="{{ url_for('customers.view_pf') }}">修改個人資料</a>
->>>>>>> 6804295b82f31a41fc19ef1c8a92d0ef3c481c4a
+                    <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>
             </div>
