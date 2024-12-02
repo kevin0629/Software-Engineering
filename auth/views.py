@@ -1,13 +1,17 @@
 import os
 import requests
 import hashlib
+import random
+import string
 from flask import Blueprint, flash, redirect, request, render_template, url_for, session
+from flask_mail import Message, Mail
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, desc
 from contextlib import contextmanager
 from campus_eats import UserTable, Customer, Restaurant
 
 auth_blueprints = Blueprint('auth', __name__, template_folder='templates/auth', static_folder='./static')
+mail = Mail()
 
 # OAuth 設定
 CLIENT_ID = '20241007203637hgWIOoOg6QGH'  # 從中央大學 Portal 申請
@@ -128,7 +132,10 @@ def login():
 
                 if user.role == 1:
                     # print("顧客登入成功，將跳轉到菜單頁面。")
-                    return redirect(url_for('menus.view_store'))
+                    customer = db_session.query(Customer).filter_by(username=username).first()
+                    session['customer_id'] = customer.customer_id
+                    session['customer_name'] = customer.name
+                    return redirect(url_for('menus.view_store',customer_id=customer.customer_id))
                 elif user.role == 2:
                     # print("店家登入成功，將跳轉到管理頁面。")
                     restaurant = db_session.query(Restaurant).filter_by(username=username).first()
@@ -151,6 +158,11 @@ def register():
         role = request.form['role']
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('密碼和確認密碼不一致')
+            return redirect(url_for('auth.register'))
 
         with get_session() as db_session:
             is_user_exist = db_session.query(UserTable).filter_by(username=username).first() is not None
@@ -171,7 +183,7 @@ def register():
                 db_session.commit()
                 print('顧客註冊成功！')
 
-                return redirect(url_for('menus.view_store'))
+                return redirect(url_for('auth.login'))
 
             elif role == 'restaurant':
                 restaurant_name = request.form['restaurant_name']
@@ -219,9 +231,76 @@ def register():
 
     return render_template('auth/register.html')
 
-
+# 登出
 @auth_blueprints.route('/logout')
 def logout():
     # 清除用戶的 session
     session.clear()
     return redirect(url_for('auth.login'))
+
+# 忘記密碼
+@auth_blueprints.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+
+        with get_session() as db_session:
+            user = db_session.query(UserTable).filter_by(username=username).first()
+
+            if user:
+                if user.role == 1:  # 顧客
+                    customer = db_session.query(Customer).filter_by(username=username, email=email).first()
+                    if not customer:
+                        flash('帳號或電子郵件不正確。')
+                        return render_template('auth/forgot_password.html')
+                elif user.role == 2:  # 店家
+                    restaurant = db_session.query(Restaurant).filter_by(username=username, email=email).first()
+                    if not restaurant:
+                        flash('帳號或電子郵件不正確。')
+                        return render_template('auth/forgot_password.html')
+
+                new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+                encrypted_password = encrypt_password(new_password)
+
+                msg = Message('重置密碼', sender='noreply@example.com', recipients=[email])
+                msg.body = f'您的新密碼是：{new_password}'
+
+                try:
+                    mail.send(msg)
+                    user.password = encrypted_password
+                    db_session.commit()
+                    flash('新密碼已發送到您的電子郵件。')
+                    return redirect(url_for('auth.login'))
+                except Exception as e:
+                    flash('無法發送電子郵件，請稍後再試。')
+                    return render_template('auth/forgot_password.html')
+            else:
+                flash('帳號或電子郵件不正確。')
+
+    return render_template('auth/forgot_password.html')
+
+# 修改密碼
+@auth_blueprints.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        if new_password != confirm_password:
+            flash('新密碼和確認密碼不一致')
+            return redirect(url_for('auth.change_password'))
+
+        with get_session() as db_session:
+            user = db_session.query(UserTable).filter_by(username=session['username']).first()
+            if user and user.password == encrypt_password(current_password):
+                user.password = encrypt_password(new_password)
+                db_session.commit()
+                flash('密碼修改成功')
+                return redirect(url_for('auth.login'))
+            else:
+                flash('當前密碼不正確')
+                return redirect(url_for('auth.change_password'))
+
+    return render_template('auth/change_password.html')

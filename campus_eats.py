@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, declarative_base
 # 先不指定具體資料庫，連接 MySQL 伺服器
 # DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com' #AWS
 DATABASE_URL = 'mysql+pymysql://root:@localhost'
+# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
 engine = create_engine(DATABASE_URL)
 
 # 創建資料庫
@@ -91,6 +92,7 @@ class OrderTable(Base):
     payment_method = Column(Integer, comment='付款方式（如：1現金、2信用卡）')
     payment_status = Column(Integer, comment='付款狀態（如：0未付款、1已付款）')
     order_note = Column(Text, comment='訂單備註')
+    order_pick_up_time = Column(DateTime, nullable=False, comment='訂單取餐時間')
     customer_id = Column(Integer, ForeignKey('customer.customer_id'), comment='對應的顧客ID（FK）')
 
     # 訂單與顧客的多對一關係，指向 Customer 類
@@ -121,6 +123,7 @@ class OrderDetail(Base):
 # 創建資料庫引擎（使用你的資料庫資訊）
 # DATABASE_URL = 'mysql+pymysql://root:113423027@mysql-1.cfg8ygkqmlab.ap-northeast-3.rds.amazonaws.com/campus_eats' #AWS
 DATABASE_URL = 'mysql+pymysql://root:@localhost/campus_eats'
+# DATABASE_URL = 'mysql+pymysql://root:mysql@localhost/campus_eats'
 engine = create_engine(DATABASE_URL)
 
 # 建立所有表格

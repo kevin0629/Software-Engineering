@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCU Campus Eats | 歷史訂單</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/view_order.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/navbar.css') }}">
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <header class="navbar">
+        <!-- 左側LOGO和標題 -->
+        <a href="{{ url_for('menus.view_store') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO">
+            <span>NCU Campus Eats | 歷史訂單</span>
+        </a>
+
+        <!-- 右側按鈕與下拉選單 -->
+        <div class="menu">
+            <a href="{{ url_for('customers.view_cart') }}">
+                <button class="cart-button">
+                    <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart">
+                </button>
+            </a>
+            <div class="dropdown">
+                <img src="{{ url_for('static', filename='images/customer.png') }}" alt="Photo">
+                <span>{{ customer_name }}</span>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('customers.view_order') }}">歷史訂單</a>
+                    <a href="{{ url_for('customers.view_pf') }}">修改個人資料</a>
+                    <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
+                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        {% if order_all_list %}
+            {% for order_id, order_data in order_all_list.items() %}
+                <div class="order-section">
+                    <p><strong>店家：</strong>
+                        {% for restaurant_id, restaurant_data in order_data['restaurants'].items() %}
+                            {{ restaurant_data['restaurant_name'] }}{% if not loop.last %}，{% endif %}
+                        {% endfor %}
+                    </p>
+                    <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
+                    <p><strong>訂單狀態：</strong>
+                        {% if order_data['order_status'] == 1 %}待處理
+                        {% elif order_data['order_status'] == 2 %}店家確認
+                        {% elif order_data['order_status'] == 3 %}處理中
+                        {% elif order_data['order_status'] == 4 %}已完成
+                        {% endif %}
+                    </p>
+                    <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
+                    <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="button view-button" onclick="openModal('{{ order_id }}')">查看詳細</button>
+
+                        {% if order_data['order_status'] == 1 %}
+                            <form action="{{ url_for('customers.return_order') }}" method="post" style="display:inline;">
+                                <input type="hidden" name="order_id" value="{{ order_id }}">
+                                <button type="submit" class="button modify-button" onclick="return confirm('你確定要將該訂單退回尚未送出狀態並清除總金額嗎？')">修改訂單</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>目前沒有歷史訂單。</p>
+        {% endif %}
+    </div>
+
+    <!-- 模態視窗 -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>訂單詳細資料</h3>
+            <div id="modalDetails">
+                <!-- 訂單詳細資料將顯示於此 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 控制模態視窗 -->
+    <script>
+        function openModal(orderId) {
+            const orderData = JSON.parse('{{ order_all_list | tojson }}');
+            const order = orderData[orderId];
+            let modalDetails = '';
+
+            for (const [restaurantId, restaurantData] of Object.entries(order.restaurants)) {
+                modalDetails += `<p><strong>店家：</strong>${restaurantData.restaurant_name}</p>`;
+            }
+
+            modalDetails += `
+                <p><strong>下單時間：</strong>${order.order_time}</p>
+                <p><strong>訂單狀態：</strong>${
+                    order.order_status === 1 ? '待處理' :
+                    order.order_status === 2 ? '店家確認' :
+                    order.order_status === 3 ? '處理中' : '已完成'
+                }</p>
+                <p><strong>總金額：</strong>${order.total_amount} 元</p>
+                <p><strong>付款方式：</strong>${order.payment_method}</p>
+                <p><strong>付款狀態：</strong>${order.payment_status}</p>
+                <hr>
+            `;
+
+            for (const [restaurantId, restaurantData] of Object.entries(order.restaurants)) {
+                modalDetails += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>餐點名稱</th>
+                                <th>價格</th>
+                                <th>數量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                restaurantData.items.forEach(item => {
+                    modalDetails += `
+                        <tr>
+                            <td>${item.item_name}</td>
+                            <td>${item.price} 元</td>
+                            <td>${item.quantity}</td>
+                        </tr>
+                    `;
+                });
+                modalDetails += `</tbody></table>`;
+            }
+
+            document.getElementById('modalDetails').innerHTML = modalDetails;
+            document.getElementById('orderModal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

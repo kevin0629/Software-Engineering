@@ -4,7 +4,7 @@ from customers.views import customers_blueprints
 from restaurants.views import restaurants_blueprints
 from menus.views import menus_blueprints
 from auth.views import auth_blueprints
-import campus_eats
+from flask_mail import Mail
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.urandom(24) 
@@ -13,6 +13,16 @@ app.register_blueprint(customers_blueprints, url_prefix='/customers')
 app.register_blueprint(restaurants_blueprints, url_prefix='/restaurants')
 app.register_blueprint(auth_blueprints)
 app.register_blueprint(menus_blueprints, url_prefix='/menus')
+
+# 配置 Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'ncucampuseats@gmail.com'
+app.config['MAIL_PASSWORD'] = '' # 要記得填入
+app.config['MAIL_DEFAULT_SENDER'] = 'ncucampuseats@gmail.com'
+
+mail = Mail(app)
 
 # 登入頁面
 @app.route('/')
