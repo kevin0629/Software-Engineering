@@ -88,7 +88,7 @@ def view_store():
                 })
 
         # 將營業中的店家資料傳遞到模板
-        data = {"username": session.get('username'), "openedRestaurants": valid_stores}
+        data = {"customer_name": session.get('customer_name'), "openedRestaurants": valid_stores}
 
     return render_template('customers/view_store.html', **data)
     
@@ -127,6 +127,8 @@ def view_menu(restaurant_id):
     if role == 1:
         data = {
             "username": session.get('username'),
+            "customer_id": session.get('customer_id'),
+            "customer_name": session.get('customer_name'),
             "restaurant": restaurant_data,
             "menu_items": menu_items  # 使用轉換過的資料
         }

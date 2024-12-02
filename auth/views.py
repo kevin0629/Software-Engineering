@@ -129,7 +129,10 @@ def login():
 
                 if user.role == 1:
                     # print("顧客登入成功，將跳轉到菜單頁面。")
-                    return redirect(url_for('menus.view_store'))
+                    customer = db_session.query(Customer).filter_by(username=username).first()
+                    session['customer_id'] = customer.customer_id
+                    session['customer_name'] = customer.name
+                    return redirect(url_for('menus.view_store',customer_id=customer.customer_id))
                 elif user.role == 2:
                     # print("店家登入成功，將跳轉到管理頁面。")
                     restaurant = db_session.query(Restaurant).filter_by(username=username).first()

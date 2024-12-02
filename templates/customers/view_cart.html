@@ -1,0 +1,217 @@
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCU Campus Eats | 目前訂單</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/view_cart.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='customers/navbar.css') }}">
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <header class="navbar">
+        <!-- 左側LOGO和標題 -->
+        <a href="{{ url_for('menus.view_store') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO">
+            <span>NCU Campus Eats | 餐廳資訊</span>
+        </a>
+
+        <!-- 右側按鈕與下拉選單 -->
+        <div class="menu">
+            <a href="{{ url_for('customers.view_cart') }}">
+                <button class="cart-button" >
+                    <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart">
+                </button>
+            </a>
+            <div class="dropdown">
+                <img src="{{ url_for('static',filename='images/customer.png') }}" alt="Photo"> <!-- 替換為店家Icon的URL -->
+                <span>{{ customer_name }}</span>
+                <div class="dropdown-menu">
+                    <a href="{{ url_for('customers.view_order') }}">歷史訂單</a>
+                    <a href="{{ url_for('customers.view_pf') }}">修改個人資料</a>
+                    <a href="{{ url_for('auth.logout') }}">登出</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id='shopping-cart'>
+        <h1>購物車內容物</h1>
+        {% if cart_items %}
+            {% for restaurant_id, restaurant_info in cart_items.items() %}
+                <div class="restaurant-section">
+                    <h2>店家：{{ restaurant_info['restaurant_name'] }}</h2>
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th>餐點名稱</th>
+                                <th>餐點單價</th>
+                                <th>購物車內數量</th>
+                                <th>餐點備註</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in restaurant_info['items'] %}
+                                <tr>
+                                    <td>{{ item['item_name'] }}</td>
+                                    <td>{{ item['price'] }} 元</td>
+                                    <td>{{ item['quantity'] }}</td>
+                                    <td>
+                                        {% if item['item_note'] %}
+                                            {{ item['item_note'] }}
+                                        {% else %}
+                                            目前無備註
+                                        {% endif %}
+                                    </td>
+                                    <td class="action-column">
+                                        <div class="action-buttons">
+                                            <form action="{{ url_for('customers.add_to_cart') }}" method="post" onsubmit="return confirmAction('{{ item.item_name }}', 'add')">
+                                                <input type="hidden" name="item_id" value="{{ item['item_id'] }}">
+                                                <input type="hidden" name="redirect_flag" value="1">
+                                                <button type="submit" class="button button-add">再新增「1」份至購物車</button>
+                                            </form>
+                                            <form action="{{ url_for('customers.remove_from_cart') }}" method="post" onsubmit="return confirmAction('{{ item.item_name }}', 'remove')">
+                                                <input type="hidden" name="order_id" value="{{ restaurant_info['order_id'] }}">
+                                                <input type="hidden" name="order_detail_id" value="{{ item['order_detail_id'] }}">
+                                                <button type="submit" class="button button-remove">從購物車中移除「1」份</button>
+                                            </form>
+                                            <button class="button add-note-button" onclick="openNoteModal('{{ restaurant_info.order_id }}', '{{ item.order_detail_id }}')">
+                                                新增餐點備註
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <p class="total-amount"><strong>總金額：{{ restaurant_info['total_price'] }} 元</strong></p>
+                    <p>
+                        <strong>目前備註：</strong>
+                        {% if restaurant_info['order_note'] %}
+                            {{ restaurant_info['order_note'] }}
+                        {% else %}
+                            目前無備註
+                        {% endif %}
+                    </p>
+                    <div class="action-buttons">
+                        <button class="button add-note-button" onclick="openOrderNoteModal('{{ restaurant_info.order_id }}')">為整筆訂單新增備註</button>
+                        <button class="button checkout-button" onclick="openPaymentModal('{{ restaurant_info.order_id }}', '{{ restaurant_info.total_price }}')">前往結帳</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>目前沒有任何未送出的訂單。</p>
+        {% endif %}
+    </div>
+    
+    
+
+    <!-- 付款方式模態框 -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+            <h2>選擇付款方式</h2>
+            <form id="paymentForm" action="{{ url_for('customers.checkout_order') }}" method="post" onsubmit="return confirmAction('', 'checkout')">
+                <input type="hidden" id="paymentOrderId" name="order_id">
+                <input type="hidden" id="totalPrice" name="total_price">
+                <label for="payment_method">請選擇付款方式：</label><br><br>
+                <select id="payment_method" name="payment_method" required>
+                    <option value="" disabled selected>選擇付款方式</option>
+                    <option value="1">現金</option>
+                    <!--<option value="2">信用卡</option>-->
+                </select>
+                <br><br>
+                <div class="modal-actions">
+                    <button type="button" onclick="submitPayment()">提交</button>
+                    <button type="button" onclick="closePaymentModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 新增備註的模態框 -->
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeNoteModal()">&times;</span>
+        <h2>新增備註</h2>
+        <form id="noteForm" action="{{ url_for('customers.add_note') }}" method="post">
+            <input type="hidden" id="noteOrderId" name="order_id">
+            <input type="hidden" id="noteDetailId" name="order_detail_id">
+            <label for="note">請輸入備註內容：</label>
+            <textarea id="note" name="note" rows="4" required></textarea>
+            <div class="modal-actions">
+                <button type="button" onclick="submitNote()">提交</button>
+                <button type="button" onclick="closeNoteModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script>
+        function confirmAction(itemName, action) {
+            let message = "";
+            if (action === "add") {
+                message = "你確定要將 " + itemName + " 加入「1」份至購物車嗎？";
+            } else if (action === "remove") {
+                message = "你確定要將 " + itemName + " 從購物車中移除「1」份嗎？";
+            } else if (action === "checkout") {
+                message = "你確定要進行結帳嗎？";
+            }
+
+            if (confirm(message)) {
+                if (action === "add") {
+                    alert(itemName + " 新增成功！");
+                } else if (action === "remove") {
+                    alert(itemName + " 移除成功！");
+                } else if (action === "checkout") {
+                    alert("訂單結帳成功！");
+                }
+                return true; // 允許表單提交
+            } else {
+                return false; // 阻止表單提交
+            }
+        }
+
+        // 開啟備註模態框
+        function openNoteModal(orderId, orderDetailId = null) {
+            document.getElementById('noteOrderId').value = orderId;
+            document.getElementById('noteDetailId').value = orderDetailId || '';
+            document.getElementById('noteModal').style.display = 'block';
+        }
+
+        // 開啟整筆訂單備註模態框
+        function openOrderNoteModal(orderId) {
+            openNoteModal(orderId);
+        }
+
+        // 關閉備註模態框
+        function closeNoteModal() {
+            document.getElementById('noteModal').style.display = 'none';
+        }
+
+        // 提交備註
+        function submitNote() {
+            const form = document.getElementById('noteForm');
+            form.submit();
+        }
+
+        // 開啟付款方式模態框
+        function openPaymentModal(orderId, totalPrice) {
+            document.getElementById('paymentOrderId').value = orderId;
+            document.getElementById('totalPrice').value = totalPrice;
+            document.getElementById('paymentModal').style.display = 'block';
+        }
+
+        // 關閉付款方式模態框
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        // 提交付款
+        function submitPayment() {
+            const form = document.getElementById('paymentForm');
+            form.submit();
+        }
+    </script>
+</body>
+</html>
