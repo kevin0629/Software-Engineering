@@ -18,7 +18,7 @@ def app():
     app = Flask(__name__, template_folder='../templates')
     app.config['TESTING'] = True
     app.config['MAIL_SUPPRESS_SEND'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mysql@localhost/campus_eats'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mysql@localhost/campus_eats' # 要記得改
     app.secret_key = os.urandom(24)
     app.register_blueprint(auth_blueprints)
     app.register_blueprint(menus_blueprints, url_prefix='/menus')
@@ -82,12 +82,21 @@ def test_forgot_password_get(client):
 def test_successful_login(client):
     with get_session() as db_session:
         user = UserTable(username='testuser', password=encrypt_password('testpassword'), role=1)
+        customer = Customer(name='Customer Name', phone='1234567890', email='customer@example.com', username='testuser')
         db_session.add(user)
+        db_session.add(customer)
         db_session.commit()
 
     response = client.post('/login', data={'username': 'testuser', 'password': 'testpassword'})
-    assert response.status_code == 302
-    assert response.location.endswith('/menus/view_store')
+    assert response.status_code == 302, f"Expected status code 302, but got {response.status_code}"
+    assert response.location.startswith('/menus/view_store'), f"Expected redirect to /menus/view_store, but got {response.location}"
+    assert 'customer_id=' in response.location, f"Expected 'customer_id=' in the redirect URL, but got {response.location}"
+
+    with client.session_transaction() as sess:
+        assert sess.get('username') == 'testuser', f"Expected username 'testuser', but got {sess.get('username')}"
+        assert sess.get('role') == 1, f"Expected role 1, but got {sess.get('role')}"
+        assert 'customer_id' in sess, "Expected 'customer_id' in session"
+        assert 'customer_name' in sess, "Expected 'customer_name' in session"
 
 def test_failed_login(client):
     response = client.post('/login', data={'username': 'wronguser', 'password': 'wrongpassword'})
@@ -134,6 +143,61 @@ def test_forgot_password_post(client):
     response = client.post('/forgot_password', data={'username': 'testuser', 'email': 'customer@example.com'})
     assert response.status_code == 302
     assert "新密碼已發送到您的電子郵件。".encode('utf-8') in client.get(response.location).data
+
+def test_change_password_get(client):
+    with client.session_transaction() as sess:
+        sess['username'] = 'testuser'
+    response = client.get('/change_password')
+    assert response.status_code == 200
+    assert "修改密碼".encode('utf-8') in response.data
+
+def test_change_password_success(client):
+    with get_session() as db_session:
+        user = UserTable(username='testuser', password=encrypt_password('oldpassword'), role=1)
+        db_session.add(user)
+        db_session.commit()
+
+    with client.session_transaction() as sess:
+        sess['username'] = 'testuser'
+
+    response = client.post('/change_password', data={
+        'current_password': 'oldpassword',
+        'new_password': 'newpassword',
+        'confirm_password': 'newpassword'
+    })
+    assert response.status_code == 302
+    assert response.location.endswith('/login')
+    with get_session() as db_session:
+        user = db_session.query(UserTable).filter_by(username='testuser').first()
+        assert user.password == encrypt_password('newpassword')
+
+def test_change_password_mismatch(client):
+    with client.session_transaction() as sess:
+        sess['username'] = 'testuser'
+    response = client.post('/change_password', data={
+        'current_password': 'oldpassword',
+        'new_password': 'newpassword',
+        'confirm_password': 'differentpassword'
+    })
+    assert response.status_code == 302
+    assert "新密碼和確認密碼不一致".encode('utf-8') in client.get(response.location).data
+
+def test_change_password_incorrect_current(client):
+    with get_session() as db_session:
+        user = UserTable(username='testuser', password=encrypt_password('oldpassword'), role=1)
+        db_session.add(user)
+        db_session.commit()
+
+    with client.session_transaction() as sess:
+        sess['username'] = 'testuser'
+
+    response = client.post('/change_password', data={
+        'current_password': 'wrongpassword',
+        'new_password': 'newpassword',
+        'confirm_password': 'newpassword'
+    })
+    assert response.status_code == 302
+    assert "當前密碼不正確".encode('utf-8') in client.get(response.location).data
 
 # To run the tests and generate an HTML report, use the following command:
 # pytest --html=report.html
