@@ -113,6 +113,7 @@ class OrderDetail(Base):
     item_id = Column(Integer, ForeignKey('menu_item.item_id'), comment='對應的餐點ID')
     item_note = Column(Text, comment='餐點備註')
     quantity = Column(Integer, nullable=False, comment='購買的餐點數量')
+    item_price = Column(Integer, nullable=False, comment='餐點單價')
 
     # 訂單明細與訂單的多對一關係，指向 OrderTable 類
     order = relationship('OrderTable', back_populates='order_details')
