@@ -555,14 +555,4 @@ def add_note(): # 新增備註
 
     return redirect(url_for('customers.view_cart'))
 
-@customers_blueprints.route('/get_pickup_times', methods=['GET'])
-def get_pickup_times(): # 取得可供取餐的時間
-    # 模擬獲取可用取餐時間的數據，你可以根據需求從資料庫中獲取數據
-    available_times = [
-        "12:00 PM - 12:30 PM",
-        "12:30 PM - 1:00 PM",
-        "1:00 PM - 1:30 PM",
-        "1:30 PM - 2:00 PM",
-        "2:00 PM - 2:30 PM"
-    ]
-    return jsonify(available_times)
+
