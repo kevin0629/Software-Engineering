@@ -109,10 +109,15 @@ def callback():
             db_session.add(new_customer)
             db_session.commit()
             print(f"User '{username}' added to Customer successfully.")
+            customer = db_session.query(Customer).filter_by(username=username).first()
+        else:
+            customer = db_session.query(Customer).filter_by(username=username).first()
 
         # 有在用戶資料表中 -> 登入成功，顯示餐廳清單頁面
         session['username'] = username
         session['role'] = role
+        session['customer_id'] = customer.customer_id
+        session['customer_name'] = customer.name
         return redirect(url_for('menus.view_store'))  # 新用戶自動導向顧客菜單頁面
 
 

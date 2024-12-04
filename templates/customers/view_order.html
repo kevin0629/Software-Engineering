@@ -63,6 +63,9 @@
                         {% if order_data['order_status'] == 1 %}
                             <form action="{{ url_for('customers.return_order') }}" method="post" style="display:inline;">
                                 <input type="hidden" name="order_id" value="{{ order_id }}">
+                                {% for restaurant_id, restaurant_data in order_data['restaurants'].items() %}
+                                    <input type="hidden" name="restaurant_id" value="{{ restaurant_data['restaurant_id'] }}">
+                                {% endfor %}
                                 <button type="submit" class="button modify-button" onclick="return confirm('你確定要將該訂單退回尚未送出狀態並清除總金額嗎？')">修改訂單</button>
                             </form>
                         {% endif %}
@@ -71,7 +74,18 @@
             {% endfor %}
         {% else %}
             <p>目前沒有歷史訂單。</p>
-        {% endif %}
+        {% endif %}     
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <script>
+                        alert("{{ message }}");
+                </script>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
     </div>
 
     <!-- 模態視窗 -->

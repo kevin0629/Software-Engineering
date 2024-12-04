@@ -62,6 +62,7 @@
                         {% endif %}
                         <form action="{{ url_for('customers.add_to_cart') }}" method="post" onsubmit="return confirmAddToCart('{{ item.item_name }}')">
                             <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                            <input type="hidden" name="item_price" value="{{ item.price }}">
                             <input type="hidden" name="redirect_flag" value="0">
                             <button type="submit" class="add-to-cart-button">新增「1」份至購物車</button>
                         </form>

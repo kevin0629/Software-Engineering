@@ -68,6 +68,7 @@
                                         <div class="action-buttons">
                                             <form action="{{ url_for('customers.add_to_cart') }}" method="post" onsubmit="return confirmAction('{{ item.item_name }}', 'add')">
                                                 <input type="hidden" name="item_id" value="{{ item['item_id'] }}">
+                                                <input type="hidden" name="item_price" value="{{ item['price'] }}">
                                                 <input type="hidden" name="redirect_flag" value="1">
                                                 <button type="submit" class="button button-add">再新增「1」份至購物車</button>
                                             </form>
@@ -95,8 +96,12 @@
                         {% endif %}
                     </p>
                     <div class="action-buttons">
+                        <form action="{{ url_for('customers.delete_order') }}" method="post" onsubmit="return confirmDeleteOrder()">
+                            <input type="hidden" name="order_id" value="{{ restaurant_info['order_id'] }}">
+                            <button type="submit" class="button delete-order-button">刪除整筆訂單</button>
+                        </form>
                         <button class="button add-note-button" onclick="openOrderNoteModal('{{ restaurant_info.order_id }}')">為整筆訂單新增備註</button>
-                        <button class="button checkout-button" onclick="openPaymentModal('{{ restaurant_info.order_id }}', '{{ restaurant_info.total_price }}')">前往結帳</button>
+                        <button class="button checkout-button" onclick="openPaymentModal('{{ restaurant_info.order_id }}', '{{ restaurant_info.total_price }}', '{{ restaurant_id }}', '{{ restaurant_info.available_times }}')">前往結帳</button>
                     </div>
                 </div>
             {% endfor %}
@@ -115,6 +120,7 @@
             <form id="paymentForm" action="{{ url_for('customers.checkout_order') }}" method="post" onsubmit="return confirmAction('', 'checkout')">
                 <input type="hidden" id="paymentOrderId" name="order_id">
                 <input type="hidden" id="totalPrice" name="total_price">
+                <input type="hidden" id="restaurantID" name="restaurant_id">
                 <label for="payment_method">請選擇付款方式：</label><br><br>
                 <select id="payment_method" name="payment_method" required>
                     <option value="" disabled selected>選擇付款方式</option>
@@ -122,6 +128,13 @@
                     <!--<option value="2">信用卡</option>-->
                 </select>
                 <br><br>
+
+                <label for="pickup_time">請選擇取餐時間：</label><br><br>
+                <select id="pickup_time" name="pickup_time" required>
+                    <option value="" disabled selected>選擇取餐時間</option>
+                </select>
+                <br><br>
+                
                 <div class="modal-actions">
                     <button type="button" onclick="submitPayment()">提交</button>
                     <button type="button" onclick="closePaymentModal()">取消</button>
@@ -131,22 +144,22 @@
     </div>
 
     <!-- 新增備註的模態框 -->
-<div id="noteModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeNoteModal()">&times;</span>
-        <h2>新增備註</h2>
-        <form id="noteForm" action="{{ url_for('customers.add_note') }}" method="post">
-            <input type="hidden" id="noteOrderId" name="order_id">
-            <input type="hidden" id="noteDetailId" name="order_detail_id">
-            <label for="note">請輸入備註內容：</label>
-            <textarea id="note" name="note" rows="4" required></textarea>
-            <div class="modal-actions">
-                <button type="button" onclick="submitNote()">提交</button>
-                <button type="button" onclick="closeNoteModal()">取消</button>
-            </div>
-        </form>
+    <div id="noteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeNoteModal()">&times;</span>
+            <h2>新增備註</h2>
+            <form id="noteForm" action="{{ url_for('customers.add_note') }}" method="post">
+                <input type="hidden" id="noteOrderId" name="order_id">
+                <input type="hidden" id="noteDetailId" name="order_detail_id">
+                <label for="note">請輸入備註內容：</label>
+                <textarea id="note" name="note" rows="4" required></textarea>
+                <div class="modal-actions">
+                    <button type="button" onclick="submitNote()">提交</button>
+                    <button type="button" onclick="closeNoteModal()">取消</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
     <script>
         function confirmAction(itemName, action) {
@@ -197,9 +210,38 @@
         }
 
         // 開啟付款方式模態框
-        function openPaymentModal(orderId, totalPrice) {
+        function openPaymentModal(orderId, totalPrice, restaurantID, availableTimes) {
+            // 將 availableTimes 解析為 JSON 格式，確保它變成 JavaScript 陣列
+            availableTimes = JSON.parse(availableTimes);
+
+            // 如果 availableTimes 為空，顯示警告訊息並關閉模態框
+            if (availableTimes.length === 0) {
+                alert("目前店家無營業或不收單，無法前往結帳。");
+                closePaymentModal();
+                return;
+            }
+            // 設定隱藏欄位的值
             document.getElementById('paymentOrderId').value = orderId;
             document.getElementById('totalPrice').value = totalPrice;
+            document.getElementById('restaurantID').value = restaurantID;
+
+            console.log('Available pickup times:', availableTimes);
+
+            // 獲取取餐時間下拉選單元素
+            const pickupTimeSelect = document.getElementById('pickup_time');
+
+            // 清空下拉選單的內容
+            pickupTimeSelect.innerHTML = '<option value="" disabled selected>選擇取餐時間</option>';
+
+            // 將 availableTimes 內的選項添加到下拉選單中
+            availableTimes.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                pickupTimeSelect.appendChild(option);
+            });
+
+            // 顯示模態框
             document.getElementById('paymentModal').style.display = 'block';
         }
 
@@ -210,9 +252,32 @@
 
         // 提交付款
         function submitPayment() {
+            const paymentMethodSelect = document.getElementById('payment_method');
+            const pickupTimeSelect = document.getElementById('pickup_time');
+
+            const selectedPaymentMethod = paymentMethodSelect.value;
+            const selectedPickupTime = pickupTimeSelect.value;
+
+            if (selectedPaymentMethod === "" && selectedPickupTime === "") {
+                alert("請選擇付款方式和取餐時間！");
+                return;  // 阻止提交
+            } else if  (selectedPaymentMethod === ""){
+                alert("請選擇付款方式！");
+                return;
+            }else if (selectedPickupTime === ""){
+                alert("請選擇取餐時間！");
+                return;
+            }
             const form = document.getElementById('paymentForm');
             form.submit();
         }
+        
+        // 刪除整筆訂單的警告
+        function confirmDeleteOrder() {
+            return confirm("你確定要刪除整筆嗎？此操作無法恢復！");
+        }
+
+
     </script>
 </body>
 </html>

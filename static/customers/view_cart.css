@@ -78,6 +78,13 @@ body {
 }
 
 .checkout-button {
+    height: 39.2px;
+    min-width: 197.79px;
+    background-color: #FF9800;
+}
+.delete-order-button{
+    height: 39.2px;
+    min-width: 197.79px;
     background-color: #FF9800;
 }
 

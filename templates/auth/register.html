@@ -115,7 +115,7 @@
                 <input type="password" name="password" placeholder="密碼" required>
                 <input type="password" name="confirm_password" placeholder="確認密碼" required>
                 <input type="text" name="name" placeholder="姓名" required>
-                <input type="text" name="phone" placeholder="電話" required>
+                <input type="text" name="phone"  placeholder="電話 (請輸入十位數字)" pattern="\d{10}" required>
                 <input type="email" name="email" placeholder="電子郵件" required>
                 <input type="hidden" name="role" value="customer">  <!-- 使用描述性值 -->
                 <input type="submit" value="註冊">
@@ -130,7 +130,7 @@
                 <input type="password" name="password" placeholder="密碼" required>
                 <input type="password" name="confirm_password" placeholder="確認密碼" required>
                 <input type="text" name="restaurant_name" placeholder="店家名稱" required>
-                <input type="text" name="phone" placeholder="電話" required>
+                <input type="text" name="phone"  placeholder="電話 (請輸入十位數字)" pattern="\d{10}" required>
                 <input type="text" name="address" placeholder="地址" required>
                 {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
                     <fieldset>

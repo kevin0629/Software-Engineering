@@ -1,10 +1,10 @@
 import os
-from flask import Blueprint, render_template, request, redirect, flash, session, url_for
+from flask import Blueprint, json, jsonify, render_template, request, redirect, flash, session, url_for
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, null, text
 from contextlib import contextmanager
 from campus_eats import UserTable, Customer , OrderTable, OrderDetail
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 # 建立實體
 customers_blueprints = Blueprint('customers', __name__, template_folder='templates/customers', static_folder='./static')
@@ -39,6 +39,7 @@ def menu():
 def add_to_cart():  # 新增餐點進購物車
     if request.method == 'POST':
         item_id = request.form['item_id']  # 現在要購買之餐點 id
+        item_price = request.form['item_price'] # 目前購買的餐點價格
         redirect_flag = int(request.form.get('redirect_flag'))
         restaurant_id = get_restaurant_id_for_item(item_id) # 目前購買餐點的所屬餐廳
         customer_id = session.get('customer_id')  # 目前使用者 id
@@ -54,14 +55,14 @@ def add_to_cart():  # 新增餐點進購物車
         if not existing_order: # 如果無則建立新的訂單
             existing_order = checkOrder(customer_id)
             
-        add_one_item_in_Cart(item_id, existing_order)
+        add_one_item_in_Cart(item_id, existing_order,item_price)
         if redirect_flag == 1:
             return redirect(url_for('customers.view_cart'))
             
         else:
             return redirect(url_for('menus.view_menu', restaurant_id=restaurant_id))
 
-def add_one_item_in_Cart(item_id, order_id):  # 新增一份餐點進入購物車
+def add_one_item_in_Cart(item_id, order_id,item_price):  # 新增一份餐點進入購物車
     with get_session() as db_session:
         existing_order_detail = db_session.query(OrderDetail).filter_by(  # 確認目前是否有同筆商品的訂單細項
                 order_id=order_id,
@@ -74,6 +75,7 @@ def add_one_item_in_Cart(item_id, order_id):  # 新增一份餐點進入購物�
             new_order_detail = OrderDetail(
                 order_id=order_id,
                 item_id=item_id,
+                item_price = item_price,
                 quantity=1  # 新增時初始數量為 1
             )
             db_session.add(new_order_detail)
@@ -87,7 +89,8 @@ def checkOrder(customer_id):  # 新增一筆新的訂單
             total_amount=0,
             payment_status=0,
             customer_id=customer_id,
-            order_time=current_time
+            order_time=current_time,
+            order_pick_up_time = current_time
         )
         db_session.add(new_order)
         db_session.commit()
@@ -150,7 +153,7 @@ def fetch_cart_item(customer_id):  # 抓取目前所擁有的所有購物車
         query = text("""
             SELECT order_table.order_id, order_table.order_note, order_detail.order_detail_id, order_detail.item_id, 
                    menu_item.item_name, menu_item.price, order_detail.quantity, order_detail.item_note, 
-                   menu_item.restaurant_id, restaurant.restaurant_name
+                   menu_item.restaurant_id, restaurant.restaurant_name, restaurant.business_hours
             FROM order_table
             JOIN order_detail ON order_table.order_id = order_detail.order_id
             JOIN menu_item ON order_detail.item_id = menu_item.item_id
@@ -172,9 +175,11 @@ def fetch_cart_item(customer_id):  # 抓取目前所擁有的所有購物車
             item_note = row[7]
             restaurant_id = row[8]
             restaurant_name = row[9]
+            restaurant_business_hours= row[10]
 
             # 計算單筆商品的小計
             item_total_price = item_price * item_quantity
+            available_times = get_available_times(restaurant_business_hours)
             
             # 如果這個餐廳還沒有被添加到字典中
             if restaurant_id not in grouped_cart_items:
@@ -183,7 +188,8 @@ def fetch_cart_item(customer_id):  # 抓取目前所擁有的所有購物車
                     "order_id": order_id,  # 新增 order_id 到與 restaurant_id 同一層
                     "order_note": order_note,  # 新增整筆訂單的備註
                     "items": [],
-                    "total_price": 0
+                    "total_price": 0,
+                    "available_times": available_times
                 }
             
             # 將商品資訊添加到對應餐廳的 items 列表中
@@ -203,6 +209,74 @@ def fetch_cart_item(customer_id):  # 抓取目前所擁有的所有購物車
 
         print(grouped_cart_items)
     return grouped_cart_items
+
+def get_available_times(business_hours): # 生成可以取餐的時間
+    # 取得目前的日期和時間
+    now = datetime.now()
+    weekday_map = {
+        0: 'Monday',
+        1: 'Tuesday',
+        2: 'Wednesday',
+        3: 'Thursday',
+        4: 'Friday',
+        5: 'Saturday',
+        6: 'Sunday'
+    }
+    
+    # 取得今天是星期幾
+    today_weekday = weekday_map[now.weekday()]
+    
+    # 解析 restaurant_business_hours 中的營業時間
+    business_hours_dict = {}
+    for day_info in business_hours.split(", "):
+        day, hours = day_info.split(": ")
+        business_hours_dict[day] = hours
+
+    # 獲取今天的營業時間
+    today_hours = business_hours_dict.get(today_weekday)
+    if today_hours is None or today_hours == 'Closed':
+        return []  # 今日不營業，回傳空列表
+
+    # 解析今天的營業時間
+    open_time_str, close_time_str = today_hours.split("~")
+    open_time = datetime.strptime(open_time_str, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
+    close_time = datetime.strptime(close_time_str, "%H:%M").replace(year=now.year, month=now.month, day=now.day)
+    
+    # 若目前時間超過營業結束時間，回傳空列表
+    if now >= close_time:
+        return []
+
+    # 計算最早可取餐時間為現在時間的15分鐘後
+    earliest_pickup_time = now + timedelta(minutes=15)
+
+    # 將最早可取餐時間調整到最近的整點、15分、30分或45分
+    minute = earliest_pickup_time.minute
+    if minute < 15:
+        adjusted_minute = 15
+    elif minute < 30:
+        adjusted_minute = 30
+    elif minute < 45:
+        adjusted_minute = 45
+    else:
+        adjusted_minute = 0
+        earliest_pickup_time += timedelta(hours=1)
+
+    # 更新最早取餐時間
+    earliest_pickup_time = earliest_pickup_time.replace(minute=adjusted_minute, second=0, microsecond=0)
+
+    # 計算目前時間到營業結束時間的可選擇時間，並確保最早的取餐時間為調整後的時間
+    available_times = []
+    current_time = max(earliest_pickup_time, open_time)  # 確保時間從營業開始時間後開始
+    end_time = min(now + timedelta(hours=2), close_time)  # 只列出接下來兩小時內的時間，且不能超過營業結束時間
+
+    while current_time < end_time:
+        # 只列出每小時的 00 分、15 分、30 分、45 分的時間
+        if current_time.minute in [0, 15, 30, 45]:
+            available_times.append(current_time.strftime("%H:%M"))
+        current_time += timedelta(minutes=15)
+
+    available_times_json = json.dumps(available_times)
+    return available_times_json
 
 @customers_blueprints.route('/remove_from_cart', methods=['POST'])
 def remove_from_cart(): # 移除一個商品
@@ -243,21 +317,51 @@ def update_order_status_if_empty(db_session, order_id): # 檢查該訂單是否�
             existing_order.order_status = 5
             db_session.commit() 
 
+@customers_blueprints.route('/delete_order',methods = ['POST'])
+def delete_order(): # 刪除整筆購物車
+    order_id = request.form['order_id']
+    print("orderid:",order_id)
+
+    if not order_id:
+        flash('無效的訂單 ID', 'error')
+        return redirect(url_for('customers.view_order'))
+
+    with get_session() as db_session:
+        # 更新訂單狀態並清零總金額
+        order = db_session.query(OrderTable).filter_by(order_id=order_id).first()
+        if order:
+            order.order_status = 5  # 訂單狀態設置為 "尚未送出"
+            db_session.commit()  # 提交變更
+            flash('訂單狀態已送回！', 'success')
+        else:
+            flash('未找到該訂單，請檢查後再試。', 'error')
+
+    return redirect(url_for('customers.view_cart'))
+
 @customers_blueprints.route('/checkout_order', methods=['POST'])
 def checkout_order():  # 送出訂單
     if request.method == 'POST':
         order_id = request.form['order_id']
         total_price = request.form['total_price']
+        pickup_time = request.form['pickup_time'] # 取餐時間
         payment_method = request.form['payment_method']  # 新增獲取付款方式
+        
+        # 轉換時間
+        current_date = date.today()
+        pickup_time = datetime.strptime(pickup_time, "%H:%M").time()
+        pickup_datetime = datetime.combine(current_date, pickup_time)
+        formatted_datetime = pickup_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
         # 更新訂單狀態、總金額和付款方式
         with get_session() as db_session:
             order = db_session.query(OrderTable).filter_by(order_id=order_id).first()
-
+            current_time = datetime.now()  # 記錄下訂單的時間
             if order:
                 order.order_status = 1  # 設定狀態為 1 表示已送出
                 order.total_amount = total_price  # 更新總金額
                 order.payment_method = payment_method  # 更新付款方式
+                order.order_time = current_time # 更新成訂單送出時間
+                order.order_pick_up_time  = formatted_datetime 
 
                 db_session.commit() 
 
@@ -315,6 +419,7 @@ def fetch_all_orders(customer_id):  # 抓取所有狀態非 0 和 5 的屬於指
             if restaurant_id not in grouped_orders[order_id]["restaurants"]:
                 grouped_orders[order_id]["restaurants"][restaurant_id] = {
                     "restaurant_name": restaurant_name,
+                    "restaurant_id": restaurant_id,
                     "items": []
                 }
                 
@@ -333,22 +438,32 @@ def fetch_all_orders(customer_id):  # 抓取所有狀態非 0 和 5 的屬於指
 @customers_blueprints.route('/return_order', methods=['POST'])
 def return_order(): # 修改訂單狀態回到退回
     order_id = request.form['order_id']
-    
-    if not order_id:
-        flash('無效的訂單 ID', 'error')
+    restaurant_id = int(request.form['restaurant_id'])
+    customer_id = session.get('customer_id')  # 目前使用者 id
+    all__cart_item = check_existing_orders(customer_id)
+    print(all__cart_item)
+    print("restaurantid",restaurant_id)
+    existing_order = False
+    for order in all__cart_item : # 如果有抓取現有的
+        if order['restaurant_id'] == restaurant_id:
+            existing_order = True
+            break
+
+    if existing_order:
+        flash('已有相同店家未送出的訂單，無法將此訂單退回到修改狀態。', 'error')
         return redirect(url_for('customers.view_order'))
-
-    with get_session() as db_session:
-        # 更新訂單狀態並清零總金額
-        order = db_session.query(OrderTable).filter_by(order_id=order_id).first()
-        if order:
-            order.order_status = 0  # 訂單狀態設置為 "尚未送出"
-            order.total_amount = 0  # 清零總金額
-            db_session.commit()  # 提交變更
-            flash('訂單狀態已退回尚未送出，且總金額已清零。請至購物車頁面進行修改！', 'success')
-        else:
-            flash('未找到該訂單，請檢查後再試。', 'error')
-
+    else:
+        print("false")
+        with get_session() as db_session:
+            # 更新訂單狀態並清零總金額
+            order = db_session.query(OrderTable).filter_by(order_id=order_id).first()
+            if order:
+                order.order_status = 0  # 訂單狀態設置為 "尚未送出"
+                order.total_amount = 0  # 清零總金額
+                db_session.commit()  # 提交變更
+                flash('訂單狀態已退回尚未送出，且總金額已清零。\n請至購物車頁面進行修改！', 'success')
+            else:
+                flash('未找到該訂單，請檢查後再試。', 'error')
     return redirect(url_for('customers.view_order'))
 
 @customers_blueprints.route('/view_pf')
@@ -439,3 +554,15 @@ def add_note(): # 新增備註
         flash("備註新增成功！", "success")
 
     return redirect(url_for('customers.view_cart'))
+
+@customers_blueprints.route('/get_pickup_times', methods=['GET'])
+def get_pickup_times(): # 取得可供取餐的時間
+    # 模擬獲取可用取餐時間的數據，你可以根據需求從資料庫中獲取數據
+    available_times = [
+        "12:00 PM - 12:30 PM",
+        "12:30 PM - 1:00 PM",
+        "1:00 PM - 1:30 PM",
+        "1:30 PM - 2:00 PM",
+        "2:00 PM - 2:30 PM"
+    ]
+    return jsonify(available_times)
