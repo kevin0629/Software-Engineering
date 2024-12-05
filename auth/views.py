@@ -3,6 +3,7 @@ import requests
 import hashlib
 import random
 import string
+import re
 from flask import Blueprint, flash, redirect, request, render_template, url_for, session
 from flask_mail import Message, Mail
 from sqlalchemy.orm import sessionmaker
@@ -50,6 +51,11 @@ def get_session():
 def encrypt_password(password):
     encrypted_password = hashlib.sha256(password.encode()).hexdigest()
     return encrypted_password
+
+# 驗證email格式
+def is_valid_email(email):
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(email_regex, email) is not None
 
 # portal登入
 @auth_blueprints.route('/NCUlogin', methods=['GET', 'POST'])
@@ -160,25 +166,29 @@ def login():
 @auth_blueprints.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        role = request.form['role']
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
+        role = request.form.get('role')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        email = request.form.get('email') if role == 'customer' else request.form.get('manager_email')
 
         if password != confirm_password:
             flash('密碼和確認密碼不一致')
-            return redirect(url_for('auth.register'))
+            return render_template('auth/register.html', form_data=request.form)
+
+        if not is_valid_email(email):
+            flash('無效的電子郵件格式')
+            return render_template('auth/register.html', form_data=request.form)
 
         with get_session() as db_session:
             is_user_exist = db_session.query(UserTable).filter_by(username=username).first() is not None
             if is_user_exist:
                 flash('帳號已存在')
-                return redirect(url_for('auth.register'))
+                return render_template('auth/register.html', form_data=request.form)
 
             if role == 'customer':
-                name = request.form['name']
-                phone = request.form['phone']
-                email = request.form['email']
+                name = request.form.get('name')
+                phone = request.form.get('phone')
 
                 new_user = UserTable(username=username, password=encrypt_password(password), role=1)
                 new_customer = Customer(name=name, phone=phone, email=email, username=username)
@@ -186,17 +196,17 @@ def register():
                 db_session.add(new_user)
                 db_session.add(new_customer)
                 db_session.commit()
-                print('顧客註冊成功！')
+                flash('帳號註冊成功，您可以登入了！')
 
                 return redirect(url_for('auth.login'))
 
             elif role == 'restaurant':
-                restaurant_name = request.form['restaurant_name']
-                phone = request.form['phone']
-                address = request.form['address']
-                manager = request.form['manager']
-                manager_email = request.form['manager_email']
-                icon = request.files['icon']
+                restaurant_name = request.form.get('restaurant_name')
+                phone = request.form.get('phone')
+                address = request.form.get('address')
+                manager = request.form.get('manager')
+                manager_email = request.form.get('manager_email')
+                icon = request.files.get('icon')
 
                 if icon and icon.filename:
                     last_store = db_session.query(Restaurant).order_by(desc(Restaurant.restaurant_id)).first()
@@ -225,12 +235,12 @@ def register():
                 business_hours = ", ".join(f"{day}: {'、'.join(times)}" for day, times in hours.items() if times)
 
                 new_user = UserTable(username=username, password=encrypt_password(password), role=2)
-                new_restaurant = Restaurant(restaurant_name=restaurant_name, phone=phone, address=address, business_hours=business_hours, manager=manager, manager_email=manager_email, icon = image_path, username=username)
+                new_restaurant = Restaurant(restaurant_name=restaurant_name, phone=phone, address=address, business_hours=business_hours, manager=manager, manager_email=manager_email, icon=image_path, username=username)
 
                 db_session.add(new_user)
                 db_session.add(new_restaurant)
                 db_session.commit()
-                print('店家註冊成功！')
+                flash('帳號註冊成功，您可以登入了！')
 
                 return redirect(url_for('auth.login'))
 
