@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DECIMAL, Text, DateTime, ForeignKey, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
 from sqlalchemy.orm import relationship, declarative_base
 
 # 先不指定具體資料庫，連接 MySQL 伺服器
@@ -86,13 +86,13 @@ class OrderTable(Base):
     __tablename__ = 'order_table'
     
     order_id = Column(Integer, primary_key=True, autoincrement=True, comment='訂單ID，自動遞增，PK')
-    total_amount = Column(DECIMAL(10, 2), nullable=False, comment='訂單總金額')
+    total_amount = Column(Integer, nullable=False, comment='訂單總金額')
     order_status = Column(Integer, nullable=False, comment='訂單狀態（如：0下單前(在購物車中)、1待處理、2店家確認、3處理中、4已完成、5已刪除）')
     order_time = Column(DateTime, nullable=False, comment='訂單建立時間')
     payment_method = Column(Integer, comment='付款方式（如：1現金、2信用卡）')
     payment_status = Column(Integer, comment='付款狀態（如：0未付款、1已付款）')
     order_note = Column(Text, comment='訂單備註')
-    order_pick_up_time = Column(DateTime, nullable=False, comment='訂單取餐時間')
+    order_pick_up_time = Column(DateTime, comment='訂單取餐時間')
     customer_id = Column(Integer, ForeignKey('customer.customer_id'), comment='對應的顧客ID（FK）')
 
     # 訂單與顧客的多對一關係，指向 Customer 類

@@ -1,9 +1,9 @@
 import os
 from contextlib import contextmanager
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash
-from sqlalchemy import create_engine, desc
+from sqlalchemy import create_engine, desc, text
 from sqlalchemy.orm import sessionmaker
-from campus_eats import Restaurant, MenuItem
+from campus_eats import Restaurant, MenuItem, OrderTable, OrderDetail
 # from menu_service import view_menu
 
 # 建立實體
@@ -207,3 +207,88 @@ def delete_item(item_id):
         db_session.commit()
 
     return redirect(url_for('menus.view_menu', restaurant_id=session.get('restaurant_id')))
+
+@restaurants_blueprints.route('management/view_order')
+def view_order():
+    restaurant_id = session.get('restaurant_id')
+
+    with get_session() as db_session:
+        # 查詢待處理訂單資料
+        result = (
+            db_session.query(
+                OrderTable,
+                OrderDetail.order_detail_id, OrderDetail.item_id, OrderDetail.item_note,
+                OrderDetail.quantity, OrderDetail.item_price,
+                MenuItem.item_name
+            )
+            .join(OrderTable, OrderDetail.order_id == OrderTable.order_id)
+            .join(MenuItem, OrderDetail.item_id == MenuItem.item_id)
+            .join(Restaurant, MenuItem.restaurant_id == Restaurant.restaurant_id)
+            .filter(Restaurant.restaurant_id == restaurant_id, OrderTable.payment_status == 0)
+            .all()
+        )
+
+        # 使用字典來分組資料
+        order_process = {}
+        for row in result:
+            order_id = row[0].order_id
+            total_amount = row[0].total_amount
+            order_status = row[0].order_status
+            order_time = row[0].order_time
+            payment_method = row[0].payment_method
+            payment_status = row[0].payment_status
+            order_note = row[0].order_note
+            order_pick_up_time = row[0].order_pick_up_time
+            customer_id = row[0].customer_id
+            order_detail_id = row[1]
+            item_id = row[2]
+            item_note = row[3]
+            quantity = row[4]
+            price = row[5]
+            item_name = row[6]
+
+            if not order_note:
+                order_note = "無"
+            
+            if not item_note:
+                item_note = "無"
+            
+            # 將訂單資訊加入字典中
+            if order_id not in order_process:
+                order_process[order_id] = {
+                    "customer_id": customer_id,
+                    "order_status": order_status,
+                    "order_time": order_time,
+                    "total_amount": total_amount,
+                    "order_note": order_note,
+                    "order_pick_up_time": order_pick_up_time,
+                    "payment_status": "已付款" if payment_status == 1 else "未付款",
+                    "payment_method": "現金" if payment_method == 1 else "信用卡" if payment_method == 2 else "尚未付款",
+
+                    "order_details": {}
+                }
+                
+            # 將訂單詳細資訊加入訂單
+            if order_detail_id not in order_process[order_id]["order_details"]:
+                order_process[order_id]["order_details"][order_detail_id] = {
+                    "item_id": item_id,
+                    "item_name": item_name,
+                    "price": price,
+                    "quantity": quantity,
+                    "item_note": item_note
+                }
+    essential_data = {"restaurant_id": restaurant_id, "restaurant_name": session.get('restaurant_name'), "icon": session.get('icon'), "order_process": order_process}
+
+    return render_template('restaurants/view_order.html', **essential_data)
+
+@restaurants_blueprints.route('management/view_order/update_order_status', methods=['POST'])
+def update_order_status():
+    order_status = request.form['order_status']
+    order_id = request.form['order_id']
+
+    with get_session() as db_session:
+        order_info = db_session.query(OrderTable).filter_by(order_id=order_id).first()
+        order_info.order_status = order_status
+        db_session.commit()
+
+    return redirect(url_for('restaurants.view_order'))
