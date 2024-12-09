@@ -228,7 +228,9 @@
 
         <!-- 右側按鈕與下拉選單 -->
         <div class="menu">
-            <button class="order-button" onclick="manageOrders()">訂單管理</button>
+            <a href="{{ url_for('restaurants.view_order') }}" >
+                <button class="order-button">訂單管理</button>
+            </a>
             <div class="dropdown">
                 {% if icon %}
                 <img src="{{ url_for('static',filename=icon) }}" alt="店家Icon"> <!-- 替換為店家Icon的URL -->
@@ -236,7 +238,7 @@
                 <span>{{ restaurant_name }}</span>
                 <div class="dropdown-menu">
                     <a href="{{ url_for('restaurants.view_store_info') }}">餐廳資料</a>
-                    <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
+                    <a href="{{ url_for('restaurants.view_history_order') }}">歷史訂單</a>
                     <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>

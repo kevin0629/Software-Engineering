@@ -80,16 +80,6 @@
             box-shadow: 0 6px 12px rgba(69, 160, 73, 0.6);
         }
 
-        .modify-button {
-            background-color: #FFA000;
-            box-shadow: 0 4px 10px rgba(255, 160, 0, 0.4);
-        }
-
-        .modify-button:hover {
-            background-color: #FF8C00;
-            box-shadow: 0 6px 12px rgba(255, 140, 0, 0.6);
-        }
-
         /* 按鈕的點擊效果 */
         .button:active {
             transform: scale(0.95);
@@ -314,6 +304,16 @@
             box-shadow: 0 6px 12px rgba(251, 140, 0, 0.6);
         }
 
+        .update-pay-button {
+            background-color: #E91E63; /* 粉色 */
+            box-shadow: 0 4px 10px rgba(233, 30, 99, 0.4);
+        }
+
+        .update-pay-button:hover {
+            background-color: #C2185B; /* 深粉色 */
+            box-shadow: 0 6px 12px rgba(194, 24, 91, 0.6);
+        }
+
         .modal-actions {
             display: flex;
             justify-content: space-between;
@@ -367,7 +367,7 @@
                 <span>{{ restaurant_name }}</span>
                 <div class="dropdown-menu">
                     <a href="{{ url_for('restaurants.view_store_info') }}">餐廳資料</a>
-                    <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
+                    <a href="{{ url_for('restaurants.view_history_order') }}">歷史訂單</a>
                     <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>
@@ -433,6 +433,7 @@
                     <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
                     <div class="action-buttons">
                         <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
+                        <button class="button update-button" onclick="openStatusModal('{{ order_id }}', 3)">更新訂單狀態</button>
                     </div>
                 </div>
             {% endif %}
@@ -453,10 +454,22 @@
                     <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
                     <div class="action-buttons">
                         <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
+                        <button class="button update-pay-button" onclick="openPaymentModal('{{ order_id }}', 0)">更新支付狀態</button>
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
+    </div>
+
+    <!-- 模態視窗 -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>訂單詳細資料</h3>
+            <div id="modalDetails">
+                <!-- 訂單詳細資料將顯示在這裡 -->
+            </div>
+        </div>
     </div>
 
     <!-- 更新訂單狀態模態框 -->
@@ -482,6 +495,29 @@
             </form>
         </div>
     </div>
+
+    <!-- 更新支付狀態模態框 -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+            <h3>更新支付狀態</h3>
+            <form id="paymentForm" action="{{ url_for('restaurants.update_payment_status') }}" method="post">
+                <input type="hidden" id="payment_order_id" name="payment_order_id">
+                <label for="payment_status">請選擇支付狀態：</label><br><br>
+                <select id="payment_status" name="payment_status" required>
+                    <option value="" disabled selected>選擇支付狀態</option>
+                    <option value="0">未支付</option>
+                    <option value="1">已支付</option>
+                </select>
+                <br><br>
+                <div class="action-buttons">
+                    <button type="button" class="button submit-button" onclick="submitPaymentStatus()">提交</button>
+                    <button type="button" class="button cancel-button" onclick="closePaymentModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <!-- JavaScript 控制模態視窗 -->
     <script>
@@ -530,6 +566,12 @@
             `;
 
             document.getElementById('modalDetails').innerHTML = modalDetails;
+            document.getElementById('orderModal').style.display = 'block';
+        }
+
+        // 關閉訂單詳細資料模態框
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
         }
 
         // 開啟更新訂單狀態模態框
@@ -551,6 +593,34 @@
         function submitStatus() {
             const form = document.getElementById('statusForm');
             form.submit();
+        }
+
+        // 開啟更新支付狀態模態框
+        function openPaymentModal(orderId, paymentStatus) {
+            document.getElementById('payment_order_id').value = orderId;
+            document.getElementById('paymentModal').style.display = 'block';
+
+            // 設定目前支付狀態為選取狀態
+            const payStatusSelect = document.getElementById('payment_status');
+            payStatusSelect.value = paymentStatus;
+        }
+
+        // 關閉更新支付狀態模態框
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        // 提交更新支付狀態
+        function submitPaymentStatus() {
+            const form = document.getElementById('paymentForm');
+            form.submit();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
         }
     </script>
 </body>

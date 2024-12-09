@@ -312,12 +312,14 @@
         <!-- 左側LOGO和標題 -->
         <a href="{{ url_for('menus.view_menu', restaurant_id=restaurant_id) }}" class="logo">
             <img src="{{ url_for('static', filename='images/NCUlogo.png') }}" alt="LOGO"> <!-- 替換為LOGO的URL -->
-            <span>NCU Campus Eats | 訂單管理</span>
+            <span>NCU Campus Eats | 歷史訂單</span>
         </a>
 
         <!-- 右側按鈕與下拉選單 -->
         <div class="menu">
-            <button class="order-button" onclick="manageOrders()">訂單管理</button>
+            <a href="{{ url_for('restaurants.view_order') }}" >
+                <button class="order-button">訂單管理</button>
+            </a>
             <div class="dropdown">
                 {% if icon %}
                 <img src="{{ url_for('static',filename=icon) }}" alt="店家Icon"> <!-- 替換為店家Icon的URL -->
@@ -325,7 +327,7 @@
                 <span>{{ restaurant_name }}</span>
                 <div class="dropdown-menu">
                     <a href="{{ url_for('restaurants.view_store_info') }}">餐廳資料</a>
-                    <a href="#" onclick="viewOrderHistory()">歷史訂單</a>
+                    <a href="{{ url_for('restaurants.view_history_order') }}">歷史訂單</a>
                     <a href="{{ url_for('auth.change_password') }}">修改密碼</a>
                     <a href="{{ url_for('auth.logout') }}">登出</a>
                 </div>
@@ -334,84 +336,18 @@
     </header>
 
     <div class="content">
-        <div class="section-header">
-            <h2>待處理訂單</h2>
-        </div>
-        {% for order_id, order_data in order_process.items() %}
-            {% if order_data['order_status'] == 1 %}
-                <div class="order-section">
-                    <p><strong>訂單編號：</strong>{{ order_id }}</p>
-                    <p><strong>顧客ID：</strong>{{ order_data['customer_id'] }}</p>
-                    <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
-                    <p><strong>預定取餐時間：</strong>{{ order_data['order_pick_up_time'] }}</p>
-                    <p><strong>訂單備註：</strong>{{ order_data['order_note'] }}</p>
-                    <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
-                    <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
-                    <div class="action-buttons">
-                        <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
-                    </div>
+        {% for order_id, order_data in history_order.items() %}
+            <div class="order-section">
+                <p><strong>訂單編號：</strong>{{ order_id }}</p>
+                <p><strong>顧客ID：</strong>{{ order_data['customer_id'] }}</p>
+                <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
+                <p><strong>預定取餐時間：</strong>{{ order_data['order_pick_up_time'] }}</p>
+                <p><strong>訂單備註：</strong>{{ order_data['order_note'] }}</p>
+                <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
+                <div class="action-buttons">
+                    <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
                 </div>
-            {% endif %}
-        {% endfor %}
-        
-        <div class="section-header">
-            <h2>已確認的訂單</h2>
-        </div>
-        {% for order_id, order_data in order_process.items() %}
-            {% if order_data['order_status'] == 2 %}
-                <div class="order-section">
-                    <p><strong>訂單編號：</strong>{{ order_id }}</p>
-                    <p><strong>顧客ID：</strong>{{ order_data['customer_id'] }}</p>
-                    <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
-                    <p><strong>預定取餐時間：</strong>{{ order_data['order_pick_up_time'] }}</p>
-                    <p><strong>訂單備註：</strong>{{ order_data['order_note'] }}</p>
-                    <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
-                    <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
-                    <div class="action-buttons">
-                        <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-        
-        <div class="section-header">
-            <h2>處理中訂單</h2>
-        </div>
-        {% for order_id, order_data in order_process.items() %}
-            {% if order_data['order_status'] == 3 %}
-                <div class="order-section">
-                    <p><strong>訂單編號：</strong>{{ order_id }}</p>
-                    <p><strong>顧客ID：</strong>{{ order_data['customer_id'] }}</p>
-                    <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
-                    <p><strong>預定取餐時間：</strong>{{ order_data['order_pick_up_time'] }}</p>
-                    <p><strong>訂單備註：</strong>{{ order_data['order_note'] }}</p>
-                    <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
-                    <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
-                    <div class="action-buttons">
-                        <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-        
-        <div class="section-header">
-            <h2>訂單完成待付款</h2>
-        </div>
-        {% for order_id, order_data in order_process.items() %}
-            {% if order_data['order_status'] == 4 %}
-                <div class="order-section">
-                    <p><strong>訂單編號：</strong>{{ order_id }}</p>
-                    <p><strong>顧客ID：</strong>{{ order_data['customer_id'] }}</p>
-                    <p><strong>下單時間：</strong>{{ order_data['order_time'] }}</p>
-                    <p><strong>預定取餐時間：</strong>{{ order_data['order_pick_up_time'] }}</p>
-                    <p><strong>訂單備註：</strong>{{ order_data['order_note'] }}</p>
-                    <p><strong>總金額：</strong>{{ order_data['total_amount'] }} 元</p>
-                    <p><strong>付款狀態：</strong>{{ order_data['payment_status'] }}</p>
-                    <div class="action-buttons">
-                        <button class="button view-button" onclick="openModal('{{ order_id }}')">訂單明細</button>
-                    </div>
-                </div>
-            {% endif %}
+            </div>
         {% endfor %}
     </div>
 
@@ -421,7 +357,7 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>訂單詳細資料</h3>
             <div id="modalDetails">
-                <p>test</p>
+                <!-- 訂單詳細資料將顯示在這裡 -->
             </div>
         </div>
     </div>
@@ -429,7 +365,7 @@
     <!-- JavaScript 控制模態視窗 -->
     <script>
         function openModal(orderId) {
-            const orderData = JSON.parse('{{ order_process | tojson }}');
+            const orderData = JSON.parse('{{ history_order | tojson }}');
             const order = orderData[orderId];
             let modalDetails = '';
 
@@ -440,7 +376,6 @@
                 <p><strong>預定取餐時間：</strong>${order.order_pick_up_time}</p>
                 <p><strong>訂單備註：</strong>${order.order_note}</p>
                 <p><strong>總金額：</strong>${order.total_amount} 元</p>
-                <p><strong>付款狀態：</strong>${order.payment_status}</p>
                 <hr>
                 <table>
                     <thead>
