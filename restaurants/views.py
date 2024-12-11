@@ -325,6 +325,7 @@ def view_history_order():
             .join(MenuItem, OrderDetail.item_id == MenuItem.item_id)
             .join(Restaurant, MenuItem.restaurant_id == Restaurant.restaurant_id)
             .filter(MenuItem.restaurant_id == restaurant_id, OrderTable.payment_status == 1)
+            .order_by(desc(OrderTable.order_time))
             .all()
         )
 
